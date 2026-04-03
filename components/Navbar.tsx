@@ -1,5 +1,7 @@
+"use client";
 
 import Link from "next/link";
+import { useState, useEffect } from "react";
 import {
   Menu,
   Search,
@@ -17,15 +19,30 @@ const navigationLinks = [
 ] as const;
 
 const iconButtonClassName =
-  "inline-flex h-10 w-10 items-center justify-center rounded-full border border-transparent text-[#ededed] transition-colors duration-200 hover:border-[color:var(--border)] hover:text-[color:var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[#0a0a0a]";
+  "inline-flex h-10 w-10 items-center cursor-pointer justify-center rounded-full border border-transparent text-[color:var(--foreground)] transition-colors duration-200 hover:border-[color:var(--border)] hover:text-[color:var(--primary)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[color:var(--primary)] focus-visible:ring-offset-2 focus-visible:ring-offset-[color:var(--background)]";
 
 const Navbar = () => {
+  const [isScrolled, setIsScrolled] = useState(false);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 20);
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
   return (
     <header
-      className="sticky top-0 z-50 border-b [font-family:var(--font-geist-sans)]"
+      className={`sticky top-0 z-50 border-b transition-all duration-300 [font-family:var(--font-geist-sans)] ${
+        isScrolled 
+          ? "bg-transparent backdrop-blur-md border-b-transparent" 
+          : "bg-[color:var(--background)]"
+      }`}
       style={{
-        backgroundColor: "#0a0a0a",
-        borderBottomColor: "color-mix(in srgb, var(--border) 55%, transparent)",
+        borderBottomColor: isScrolled 
+          ? "transparent" 
+          : "color-mix(in srgb, var(--border) 55%, transparent)",
       }}
     >
       <nav
@@ -34,17 +51,17 @@ const Navbar = () => {
       >
         <Link
           href="/"
-          className="flex min-w-0 items-center gap-3 text-[#ededed] no-underline"
+          className="flex min-w-0 items-center gap-3 text-[color:var(--foreground)] no-underline"
         >
           <div className="flex min-w-0 flex-col justify-center leading-tight">
-            {/* PowerSave is the most prominent brand treatment for quick recognition. */}
-            <span className="truncate text-lg font-bold tracking-tight text-[#ffffff] sm:text-xl">
-             Global 7C
+            {/* Brand Title */}
+            <span className="truncate text-lg font-bold tracking-tight text-[color:var(--foreground)] sm:text-xl">
+             Global 7CS
             </span>
 
-            {/* Compact category line preserves the requested product positioning. */}
+            {/* Accent category line */}
             <span className="truncate text-[11px] font-medium text-[color:var(--primary)] sm:text-xs">
-              Power Banks • Solar • Inverters
+              Power Banks • Solar Inverters • More
             </span>
           </div>
         </Link>
@@ -55,7 +72,7 @@ const Navbar = () => {
               <Link
                 key={item.label}
                 href={item.href}
-                className="group relative text-sm font-medium text-[#ededed] no-underline transition-colors duration-200 hover:text-[color:var(--primary)]"
+                className="group relative text-sm font-medium text-[color:var(--foreground)] no-underline transition-colors duration-200 hover:text-[color:var(--primary)]"
               >
                 <span>{item.label}</span>
                 <span className="absolute inset-x-0 -bottom-1 h-px origin-left scale-x-0 bg-[color:var(--primary)] transition-transform duration-200 group-hover:scale-x-100" />
