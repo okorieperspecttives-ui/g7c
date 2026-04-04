@@ -9,11 +9,14 @@ import {
   ShoppingBag,
   UserRound,
   ChevronDown,
+  X,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import MobileMenu from "./MobileMenu";
 import CartDrawer from "./CartDrawer";
-import { CATEGORIES } from "@/lib/products";
+import { CATEGORIES, PRODUCTS, formatNaira } from "@/lib/products";
+import { useCartStore } from "@/lib/store/useCartStore";
+import Image from "next/image";
 
 const navigationLinks = [
   { label: "Shop", href: "/shop" },
@@ -93,11 +96,127 @@ const CategoriesDropdown = () => {
   );
 };
 
+const GlobalSearch = () => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [query, setQuery] = useState("");
+  const router = useRouter();
+
+  const results = useMemo(() => {
+    if (query.length < 2) return [];
+    return PRODUCTS.filter(p => 
+      p.name.toLowerCase().includes(query.toLowerCase()) || 
+      p.description.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 8);
+  }, [query]);
+
+  useEffect(() => {
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setIsOpen(false);
+    };
+    window.addEventListener("keydown", handleEsc);
+    return () => window.removeEventListener("keydown", handleEsc);
+  }, []);
+
+  return (
+    <div className="relative">
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className={iconButtonClassName}
+      >
+        <Search className="h-5 w-5" strokeWidth={2} />
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsOpen(false)}
+              className="fixed inset-0 z-40 bg-black/20 backdrop-blur-[2px]"
+            />
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              className="absolute right-0 top-full mt-4 z-50 w-[min(90vw,450px)]"
+            >
+              <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card p-4 shadow-2xl">
+                <div className="relative mb-4">
+                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    autoFocus
+                    type="text"
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Search power solutions..."
+                    className="w-full rounded-2xl border border-border bg-secondary/50 py-4 pl-12 pr-4 text-sm font-medium focus:border-primary focus:outline-none"
+                  />
+                  {query && (
+                    <button 
+                      onClick={() => setQuery("")}
+                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
+
+                <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                  {results.length > 0 ? (
+                    <div className="flex flex-col gap-2">
+                      {results.map((product) => (
+                        <Link
+                          key={product.id}
+                          href={`/products/${product.id}`}
+                          onClick={() => {
+                            setIsOpen(false);
+                            setQuery("");
+                          }}
+                          className="flex items-center gap-4 rounded-2xl p-3 transition-colors hover:bg-secondary group"
+                        >
+                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
+                            <Image src={product.image} alt={product.name} fill className="object-contain p-2" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                              {product.name}
+                            </h4>
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                              {formatNaira(product.price)}
+                            </p>
+                          </div>
+                          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all" />
+                        </Link>
+                      ))}
+                    </div>
+                  ) : query.length >= 2 ? (
+                    <div className="py-12 text-center">
+                      <p className="text-sm font-medium text-muted-foreground">No products found for &quot;{query}&quot;</p>
+                    </div>
+                  ) : (
+                    <div className="py-8 text-center">
+                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Start typing to search...</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const Navbar = () => {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const { getTotalItems } = useCartStore();
+  const cartCount = getTotalItems();
 
   useEffect(() => {
     const handleScroll = () => {
@@ -169,9 +288,7 @@ const Navbar = () => {
 
           {/* Right Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <button type="button" aria-label="Search" className={`${iconButtonClassName} hidden sm:inline-flex`}>
-              <Search className="h-5 w-5" strokeWidth={2} />
-            </button>
+            <GlobalSearch />
 
             {/* Responsive Cart Button */}
             <button 
@@ -185,15 +302,19 @@ const Navbar = () => {
               {/* Desktop link wraps icon */}
               <div className="lg:hidden">
                 <ShoppingBag className="h-5 w-5" strokeWidth={2} />
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--primary)] text-[8px] font-black text-[color:var(--primary-foreground)]">
-                  2
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground animate-in zoom-in duration-300">
+                    {cartCount}
+                  </span>
+                )}
               </div>
               <Link href="/cart" className="hidden lg:block">
                 <ShoppingBag className="h-5 w-5" strokeWidth={2} />
-                <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-[color:var(--primary)] text-[8px] font-black text-[color:var(--primary-foreground)]">
-                  2
-                </span>
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[8px] font-black text-primary-foreground animate-in zoom-in duration-300">
+                    {cartCount}
+                  </span>
+                )}
               </Link>
             </button>
 

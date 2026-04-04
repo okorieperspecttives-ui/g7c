@@ -4,7 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatNaira, Product } from "@/lib/products";
+import { formatNaira, Product, PRODUCTS } from "@/lib/products";
 import { 
   ChevronLeft, 
   ShoppingCart, 
@@ -26,7 +26,15 @@ interface ProductClientProps {
   relatedProducts: Product[];
 }
 
-export default function ProductClient({ product, relatedProducts }: ProductClientProps) {
+export default function ProductClient({ product }: { product: Product }) {
+  // Find related products (same category)
+  const relatedProducts = PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 6);
+
+  // If not enough related products, add some from other categories
+  if (relatedProducts.length < 4) {
+    const additional = PRODUCTS.filter(p => p.category !== product.category && p.id !== product.id).slice(0, 6 - relatedProducts.length);
+    relatedProducts.push(...additional);
+  }
   const [quantity, setQuantity] = useState(1);
   const [isInstallmentOpen, setIsInstallmentOpen] = useState(false);
   const addToCart = useCartStore((state) => state.addToCart);
@@ -237,14 +245,30 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-20">
-            <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
-              Related Power Solutions
-            </h2>
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+          <div className="mt-32">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                You May Also Like
+              </h2>
+              <Link 
+                href="/shop" 
+                className="text-sm font-bold text-primary hover:underline"
+              >
+                View All Marketplace
+              </Link>
+            </div>
+            
+            <div className="relative">
+              <div className="flex gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                {relatedProducts.map((p) => (
+                  <div key={p.id} className="min-w-[280px] sm:min-w-[320px] snap-start">
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+              
+              {/* Desktop fade indicators */}
+              <div className="hidden lg:block absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
             </div>
           </div>
         )}

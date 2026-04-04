@@ -28,8 +28,5 @@ export default async function ProductPage({ params }: { params: Promise<{ id: st
     notFound();
   }
 
-  // Find related products (same category)
-  const relatedProducts = PRODUCTS.filter((p) => p.category === product.category && p.id !== product.id).slice(0, 4);
-
-  return <ProductClient product={product} relatedProducts={relatedProducts} />;
+  return <ProductClient product={product} />;
 }

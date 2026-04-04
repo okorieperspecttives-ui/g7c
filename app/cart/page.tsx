@@ -2,15 +2,18 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { Trash2, Plus, Minus, ArrowRight, ShoppingBag } from "lucide-react";
+import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, X } from "lucide-react";
 import { formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, getSubtotal } = useCartStore();
+  const { items, updateQuantity, removeFromCart, clearCart, getSubtotal } = useCartStore();
   const subtotal = getSubtotal();
   const deliveryFee = 5000;
   const total = subtotal + deliveryFee;
+  const [showClearConfirm, setShowClearConfirm] = useState(false);
 
   if (items.length === 0) {
     return (
@@ -38,7 +41,16 @@ export default function CartPage() {
   return (
     <main className="min-h-screen bg-background pt-32 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-screen-2xl">
-        <h1 className="text-4xl font-bold text-foreground mb-12">Shopping Cart</h1>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-12">
+          <h1 className="text-4xl font-bold text-foreground">Shopping Cart</h1>
+          <button 
+            onClick={() => setShowClearConfirm(true)}
+            className="flex items-center justify-center gap-2 rounded-2xl border border-border bg-secondary/50 px-6 py-3 text-sm font-bold text-muted-foreground transition-all hover:bg-secondary hover:text-destructive active:scale-95"
+          >
+            <Trash2 className="h-4 w-4" />
+            Clear Cart
+          </button>
+        </div>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
           {/* Cart Items List */}
@@ -136,6 +148,57 @@ export default function CartPage() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {showClearConfirm && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setShowClearConfirm(false)}
+              className="fixed inset-0 z-[120] bg-black/60 backdrop-blur-md"
+            />
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9, y: 20 }}
+              className="fixed left-1/2 top-1/2 z-[130] w-[min(90%,400px)] -translate-x-1/2 -translate-y-1/2 rounded-[3rem] bg-background p-10 shadow-2xl"
+            >
+              <button 
+                onClick={() => setShowClearConfirm(false)}
+                className="absolute top-6 right-6 p-2 rounded-full hover:bg-secondary transition-colors"
+              >
+                <X className="h-5 w-5 text-muted-foreground" />
+              </button>
+              <div className="mb-6 flex h-16 w-16 items-center justify-center rounded-3xl bg-destructive/10 text-destructive mx-auto">
+                <Trash2 className="h-8 w-8" />
+              </div>
+              <h3 className="text-2xl font-bold text-foreground text-center mb-2">Clear Cart?</h3>
+              <p className="text-lg text-muted-foreground text-center mb-10">
+                Are you sure you want to remove all items from your cart? This action cannot be undone.
+              </p>
+              <div className="flex flex-col gap-4">
+                <button 
+                  onClick={() => {
+                    clearCart();
+                    setShowClearConfirm(false);
+                  }}
+                  className="w-full rounded-2xl bg-destructive py-5 text-base font-bold text-white transition-all hover:opacity-90 active:scale-95 shadow-xl shadow-destructive/20"
+                >
+                  Yes, Clear Everything
+                </button>
+                <button 
+                  onClick={() => setShowClearConfirm(false)}
+                  className="w-full rounded-2xl border border-border bg-secondary py-5 text-base font-bold text-foreground transition-all hover:bg-border"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </main>
   );
 }
