@@ -59,8 +59,10 @@ const Hero = () => {
             src={slide.url}
             alt={slide.title}
             fill
-            className="object-cover brightness-[0.3]"
+            className="object-cover brightness-[0.4]"
             priority={index === 0}
+            quality={95}
+            sizes="100vw"
           />
           <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
             <h1 className="mb-4 max-w-4xl text-4xl font-bold tracking-tight text-[#ffffff] sm:text-6xl md:text-7xl">
