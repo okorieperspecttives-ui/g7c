@@ -3,7 +3,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Product, formatNaira } from "@/lib/products";
+import { formatNaira } from "@/lib/products";
+import { Product } from "@/lib/types";
 import { ShoppingCart, CreditCard, Plus } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { useState } from "react";
@@ -38,18 +39,29 @@ const ProductCard = ({ product }: ProductCardProps) => {
     setIsInstallmentOpen(true);
   };
 
+  const price = (product as any).markup_price || (product as any).price || 0;
+  const originalPrice =
+    (product as any).base_price || (product as any).originalPrice || price;
+  const image = (product as any).main_image || (product as any).image || "";
+  const category =
+    (product as any).category_name || (product as any).category || "";
+  const brand = (product as any).brand_name || (product as any).brand || "";
+
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/10">
       {/* Product Image */}
-      <Link href={`/products/${product.id}`} className="relative aspect-square overflow-hidden bg-muted">
+      <Link
+        href={`/products/${product.id}`}
+        className="relative aspect-square overflow-hidden bg-muted"
+      >
         <Image
-          src={product.image}
+          src={image}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute top-4 left-4 rounded-full bg-primary/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground backdrop-blur-sm">
-          {product.category}
+          {category}
         </div>
       </Link>
 
@@ -61,7 +73,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           </h3>
         </Link>
         <p className="mb-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-          by <span className="text-primary">{product.brand}</span>
+          by <span className="text-primary">{brand}</span>
         </p>
         <p className="mb-4 line-clamp-2 flex-1 text-sm text-muted-foreground">
           {product.description}
@@ -69,24 +81,24 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
         <div className="mb-6">
           <span className="text-xl font-bold text-primary">
-            {formatNaira(product.price)}
+            {formatNaira(price)}
           </span>
           <span className="ml-2 text-xs text-muted-foreground line-through opacity-50">
-            {formatNaira(product.originalPrice)}
+            {formatNaira(originalPrice)}
           </span>
         </div>
 
         {/* Action Buttons */}
         <div className="flex flex-col gap-2">
           <div className="grid grid-cols-2 gap-2">
-            <button 
+            <button
               onClick={handleBuyNow}
               className="flex cursor-pointer items-center justify-center gap-2 rounded-lg bg-primary py-2.5 text-xs font-bold text-primary-foreground transition-all hover:opacity-90 active:scale-95"
             >
               <ShoppingCart className="h-3.5 w-3.5" />
               Buy Now
             </button>
-            <button 
+            <button
               onClick={handleInstallmentClick}
               className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-xs font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
             >
@@ -94,7 +106,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               Installment
             </button>
           </div>
-          <button 
+          <button
             onClick={handleAddToCart}
             className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-border bg-secondary/50 py-2.5 text-xs font-bold text-foreground transition-all hover:bg-secondary active:scale-95"
           >
@@ -104,10 +116,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
         </div>
       </div>
 
-      <InstallmentModal 
-        isOpen={isInstallmentOpen} 
-        onClose={() => setIsInstallmentOpen(false)} 
-        productPrice={product.price}
+      <InstallmentModal
+        isOpen={isInstallmentOpen}
+        onClose={() => setIsInstallmentOpen(false)}
+        productPrice={price}
         productName={product.name}
       />
     </div>

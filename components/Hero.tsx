@@ -16,7 +16,7 @@ const HERO_IMAGES = [
     subtitle: "Harness the sun with our premium solar panels and inverters.",
   },
   {
-    url: "/assets/hero-3.jpg",
+    url: "/assets/hero-3.png",
     title: "Power Anywhere",
     subtitle: "Portable power banks and backup systems for life on the go.",
   },

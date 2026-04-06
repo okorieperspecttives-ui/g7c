@@ -1,10 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { Product } from "../products";
-
-export interface CartItem extends Product {
-  quantity: number;
-}
+import { Product, CartItem } from "../types";
 
 interface CartStore {
   items: CartItem[];
@@ -62,7 +58,11 @@ export const useCartStore = create<CartStore>()(
       },
       
       getSubtotal: () => {
-        return get().items.reduce((total, item) => total + item.price * item.quantity, 0);
+        return get().items.reduce((total, item) => {
+          // In the DB types, markup_price is the customer price
+          const price = (item as any).markup_price || (item as any).price || 0;
+          return total + price * item.quantity;
+        }, 0);
       },
     }),
     {

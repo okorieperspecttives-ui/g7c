@@ -44,19 +44,26 @@ export default function ShopClient() {
 
   const filteredProducts = useMemo(() => {
     return PRODUCTS.filter((product) => {
+      const price = (product as any).markup_price || (product as any).price || 0;
+      const category = (product as any).category_name || (product as any).category || "";
+      const brand = (product as any).brand_name || (product as any).brand || "";
+      const capacity = (product as any).capacity || "";
+
       const matchesSearch = 
         product.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
-        product.description.toLowerCase().includes(searchQuery.toLowerCase());
+        product.description?.toLowerCase().includes(searchQuery.toLowerCase()) || false;
       
-      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(product.category);
-      const matchesCapacity = selectedCapacities.length === 0 || (product.capacity && selectedCapacities.includes(product.capacity));
-      const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(product.brand);
-      const matchesPrice = product.price >= priceRange[0] && product.price <= priceRange[1];
+      const matchesCategory = selectedCategories.length === 0 || selectedCategories.includes(category);
+      const matchesCapacity = selectedCapacities.length === 0 || (capacity && selectedCapacities.includes(capacity));
+      const matchesBrand = selectedBrands.length === 0 || selectedBrands.includes(brand);
+      const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
 
       return matchesSearch && matchesCategory && matchesCapacity && matchesBrand && matchesPrice;
     }).sort((a, b) => {
-      if (sortBy === "Price: Low to High") return a.price - b.price;
-      if (sortBy === "Price: High to Low") return b.price - a.price;
+      const aPrice = (a as any).markup_price || (a as any).price || 0;
+      const bPrice = (b as any).markup_price || (b as any).price || 0;
+      if (sortBy === "Price: Low to High") return aPrice - bPrice;
+      if (sortBy === "Price: High to Low") return bPrice - aPrice;
       return 0;
     });
   }, [searchQuery, selectedCategories, selectedCapacities, selectedBrands, priceRange, sortBy]);

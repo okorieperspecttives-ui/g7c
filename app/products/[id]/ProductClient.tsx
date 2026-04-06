@@ -101,7 +101,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="flex flex-col gap-4">
             <div className="relative aspect-square overflow-hidden rounded-3xl border border-border bg-card">
               <Image
-                src={product.image}
+                src={image}
                 alt={product.name}
                 fill
                 className="object-contain p-8"
@@ -130,7 +130,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="flex flex-col">
             <div className="mb-4 flex flex-wrap items-center gap-4">
               <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
-                {product.category}
+                {category}
               </span>
               <span className="flex items-center gap-1 text-sm font-bold text-muted-foreground">
                 <Star className="h-4 w-4 fill-primary text-primary" />
@@ -156,10 +156,10 @@ export default function ProductClient({ product }: { product: Product }) {
 
             <div className="mb-10 flex items-baseline gap-4">
               <span className="text-4xl font-bold text-primary">
-                {formatNaira(product.price)}
+                {formatNaira(price)}
               </span>
               <span className="text-xl text-muted-foreground line-through opacity-50">
-                {formatNaira(product.originalPrice)}
+                {formatNaira(originalPrice)}
               </span>
             </div>
 
