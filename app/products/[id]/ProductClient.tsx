@@ -1,21 +1,21 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatNaira, Product } from "@/lib/products";
-import { 
-  ChevronLeft, 
-  ShoppingCart, 
-  CreditCard, 
-  ShieldCheck, 
-  Zap, 
-  Battery, 
-  BadgeCheck, 
-  Star, 
-  Plus, 
-  Minus 
+import { formatNaira, Product, PRODUCTS } from "@/lib/products";
+import {
+  ChevronLeft,
+  ShoppingCart,
+  CreditCard,
+  ShieldCheck,
+  Zap,
+  Battery,
+  BadgeCheck,
+  Star,
+  Plus,
+  Minus,
 } from "lucide-react";
 import ProductCard from "@/components/ProductCard";
 import { useCartStore } from "@/lib/store/useCartStore";
@@ -26,7 +26,24 @@ interface ProductClientProps {
   relatedProducts: Product[];
 }
 
-export default function ProductClient({ product, relatedProducts }: ProductClientProps) {
+export default function ProductClient({ product }: { product: Product }) {
+  // Find related products (same category)
+  const relatedProducts = useMemo(() => {
+    const sameCategory = PRODUCTS.filter(
+      (p) => p.category === product.category && p.id !== product.id,
+    );
+
+    if (sameCategory.length >= 6) {
+      return sameCategory.slice(0, 6);
+    }
+
+    const others = PRODUCTS.filter(
+      (p) => p.category !== product.category && p.id !== product.id,
+    );
+    // Shuffle others slightly or just take from start
+    return [...sameCategory, ...others].slice(0, 6);
+  }, [product]);
+
   const [quantity, setQuantity] = useState(1);
   const [isInstallmentOpen, setIsInstallmentOpen] = useState(false);
   const addToCart = useCartStore((state) => state.addToCart);
@@ -48,19 +65,19 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
   const productSchema = {
     "@context": "https://schema.org/",
     "@type": "Product",
-    "name": product.name,
-    "image": product.image,
-    "description": product.description,
-    "brand": {
+    name: product.name,
+    image: product.image,
+    description: product.description,
+    brand: {
       "@type": "Brand",
-      "name": product.brand
+      name: product.brand,
     },
-    "offers": {
+    offers: {
       "@type": "Offer",
-      "priceCurrency": "NGN",
-      "price": product.price,
-      "availability": "https://schema.org/InStock"
-    }
+      priceCurrency: "NGN",
+      price: product.price,
+      availability: "https://schema.org/InStock",
+    },
   };
 
   return (
@@ -94,8 +111,16 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
             {/* Gallery Thumbnails Placeholder */}
             <div className="grid grid-cols-4 gap-4">
               {[1, 2, 3, 4].map((i) => (
-                <div key={i} className="relative aspect-square cursor-pointer rounded-2xl border border-border bg-card opacity-50 transition-all hover:border-primary hover:opacity-100">
-                  <Image src={product.image} alt={product.name} fill className="object-contain p-2" />
+                <div
+                  key={i}
+                  className="relative aspect-square cursor-pointer rounded-2xl border border-border bg-card opacity-50 transition-all hover:border-primary hover:opacity-100"
+                >
+                  <Image
+                    src={product.image}
+                    alt={product.name}
+                    fill
+                    className="object-contain p-2"
+                  />
                 </div>
               ))}
             </div>
@@ -121,7 +146,8 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
               {product.name}
             </h1>
             <p className="mb-6 text-xl font-medium text-muted-foreground">
-              Brand: <span className="text-primary font-bold">{product.brand}</span>
+              Brand:{" "}
+              <span className="text-primary font-bold">{product.brand}</span>
             </p>
 
             <p className="mb-8 text-lg leading-relaxed text-muted-foreground sm:text-xl">
@@ -139,16 +165,20 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
             {/* Quantity Selector */}
             <div className="mb-10 flex items-center gap-4">
-              <span className="text-sm font-bold text-foreground uppercase tracking-widest">Quantity:</span>
+              <span className="text-sm font-bold text-foreground uppercase tracking-widest">
+                Quantity:
+              </span>
               <div className="flex items-center rounded-xl border border-border bg-card p-1">
-                <button 
+                <button
                   onClick={() => handleQuantityChange(-1)}
                   className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-xl font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
                 >
                   <Minus className="h-4 w-4" />
                 </button>
-                <span className="w-12 text-center font-bold text-foreground">{quantity}</span>
-                <button 
+                <span className="w-12 text-center font-bold text-foreground">
+                  {quantity}
+                </span>
+                <button
                   onClick={() => handleQuantityChange(1)}
                   className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-xl font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
                 >
@@ -159,21 +189,21 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
             {/* Action Buttons */}
             <div className="mb-10 flex flex-col gap-4 sm:flex-row">
-              <button 
+              <button
                 onClick={handleBuyNow}
                 className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl bg-primary py-5 text-base font-bold text-primary-foreground transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20"
               >
                 <ShoppingCart className="h-5 w-5" />
                 Buy Now
               </button>
-              <button 
+              <button
                 onClick={handleAddToCart}
                 className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl border-2 border-primary py-5 text-base font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
               >
                 <Plus className="h-5 w-5" />
                 Add to Cart
               </button>
-              <button 
+              <button
                 onClick={() => setIsInstallmentOpen(true)}
                 className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl border-2 border-border bg-card py-5 text-base font-bold text-foreground transition-all hover:bg-secondary active:scale-95"
               >
@@ -187,13 +217,17 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <ShieldCheck className="h-5 w-5" />
                 </div>
-                <p className="text-sm font-medium text-foreground">Secure payments powered by local gateways.</p>
+                <p className="text-sm font-medium text-foreground">
+                  Secure payments powered by local gateways.
+                </p>
               </div>
               <div className="flex items-center gap-4">
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
                   <BadgeCheck className="h-5 w-5" />
                 </div>
-                <p className="text-sm font-medium text-foreground">12-month standard warranty included.</p>
+                <p className="text-sm font-medium text-foreground">
+                  12-month standard warranty included.
+                </p>
               </div>
             </div>
           </div>
@@ -208,9 +242,16 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
             <table className="w-full text-left">
               <tbody>
                 {product.specifications.map((spec, i) => (
-                  <tr key={spec.label} className={i % 2 === 0 ? "bg-background/50" : ""}>
-                    <td className="px-6 py-4 text-sm font-bold text-muted-foreground uppercase">{spec.label}</td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">{spec.value}</td>
+                  <tr
+                    key={spec.label}
+                    className={i % 2 === 0 ? "bg-background/50" : ""}
+                  >
+                    <td className="px-6 py-4 text-sm font-bold text-muted-foreground uppercase">
+                      {spec.label}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">
+                      {spec.value}
+                    </td>
                   </tr>
                 ))}
               </tbody>
@@ -225,11 +266,22 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
             {product.features.map((feature, i) => (
-              <div key={i} className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6">
+              <div
+                key={i}
+                className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6"
+              >
                 <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  {i % 3 === 0 ? <ShieldCheck className="h-6 w-6" /> : i % 3 === 1 ? <Zap className="h-6 w-6" /> : <Battery className="h-6 w-6" />}
+                  {i % 3 === 0 ? (
+                    <ShieldCheck className="h-6 w-6" />
+                  ) : i % 3 === 1 ? (
+                    <Zap className="h-6 w-6" />
+                  ) : (
+                    <Battery className="h-6 w-6" />
+                  )}
                 </div>
-                <span className="text-lg font-bold text-foreground">{feature}</span>
+                <span className="text-lg font-bold text-foreground">
+                  {feature}
+                </span>
               </div>
             ))}
           </div>
@@ -237,22 +289,41 @@ export default function ProductClient({ product, relatedProducts }: ProductClien
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
-          <div className="mt-20">
-            <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
-              Related Power Solutions
-            </h2>
-            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {relatedProducts.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
+          <div className="mt-32">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                You May Also Like
+              </h2>
+              <Link
+                href="/shop"
+                className="text-sm font-bold text-primary hover:underline"
+              >
+                View All Marketplace
+              </Link>
+            </div>
+
+            <div className="relative">
+              <div className="flex gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                {relatedProducts.map((p) => (
+                  <div
+                    key={p.id}
+                    className="min-w-[280px] sm:min-w-[320px] snap-start"
+                  >
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop fade indicators */}
+              <div className="hidden lg:block absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
             </div>
           </div>
         )}
       </div>
 
-      <InstallmentModal 
-        isOpen={isInstallmentOpen} 
-        onClose={() => setIsInstallmentOpen(false)} 
+      <InstallmentModal
+        isOpen={isInstallmentOpen}
+        onClose={() => setIsInstallmentOpen(false)}
         productPrice={product.price}
         productName={product.name}
       />
