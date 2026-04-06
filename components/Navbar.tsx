@@ -10,6 +10,7 @@ import {
   UserRound,
   ChevronDown,
   X,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import MobileMenu from "./MobileMenu";
@@ -189,14 +190,15 @@ const GlobalSearch = () => {
                   ? { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }
                   : { opacity: 0, y: -10, scale: 0.95 }
               }
+              transition={{ type: "spring", damping: 25, stiffness: 300 }}
               className={
                 isMobile
-                  ? "fixed left-1/2 top-1/2 z-[110] w-[min(90vw,450px)] lg:hidden"
+                  ? "fixed left-1/2 top-1/2 z-[110] w-[min(90vw,450px)] max-h-[80vh] flex flex-col lg:hidden"
                   : "absolute right-0 top-full mt-4 z-50 w-[min(90vw,450px)] hidden lg:block"
               }
             >
-              <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card p-4 shadow-2xl">
-                <div className="flex items-center justify-between mb-4 lg:hidden">
+              <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card p-4 shadow-2xl flex flex-col max-h-full">
+                <div className="flex items-center justify-between mb-4 lg:hidden flex-shrink-0">
                   <h3 className="text-lg font-bold text-foreground px-2">
                     Search Products
                   </h3>
@@ -208,7 +210,7 @@ const GlobalSearch = () => {
                   </button>
                 </div>
 
-                <div className="relative mb-4">
+                <div className="relative mb-4 flex-shrink-0">
                   <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                   <input
                     autoFocus
@@ -228,7 +230,7 @@ const GlobalSearch = () => {
                   )}
                 </div>
 
-                <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
+                <div className="overflow-y-auto pr-2 custom-scrollbar flex-1">
                   {results.length > 0 ? (
                     <div className="flex flex-col gap-2">
                       {results.map((product) => {
@@ -457,22 +459,50 @@ const Navbar = () => {
                       className="rounded-full"
                     />
                   ) : (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary uppercase">
+                    <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary uppercase border border-primary/20">
                       {user.email?.[0]}
                     </div>
                   )}
                 </button>
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <div className="w-48 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-xl">
-                    <div className="px-3 py-2 text-xs font-bold text-muted-foreground border-b border-border mb-1 truncate">
-                      {user.email}
+                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 transform origin-top-right scale-95 group-hover:scale-100">
+                  <div className="w-56 overflow-hidden rounded-[1.5rem] border border-border bg-card p-2 shadow-2xl">
+                    <div className="px-4 py-3 border-b border-border/50 mb-1">
+                      <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">
+                        Signed in as
+                      </p>
+                      <p className="text-sm font-bold text-foreground truncate">
+                        {user.email}
+                      </p>
                     </div>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left rounded-xl px-3 py-2 text-sm font-bold text-foreground hover:bg-secondary hover:text-destructive transition-colors"
-                    >
-                      Log Out
-                    </button>
+                    <div className="p-1">
+                      <Link
+                        href="/dashboard"
+                        className="flex items-center gap-3 w-full text-left rounded-xl px-3 py-2.5 text-sm font-bold text-foreground hover:bg-secondary transition-all"
+                      >
+                        <div className="h-8 w-8 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
+                          <Zap className="h-4 w-4" />
+                        </div>
+                        Dashboard
+                      </Link>
+                      <Link
+                        href="/profile"
+                        className="flex items-center gap-3 w-full text-left rounded-xl px-3 py-2.5 text-sm font-bold text-foreground hover:bg-secondary transition-all"
+                      >
+                        <div className="h-8 w-8 rounded-lg bg-secondary flex items-center justify-center text-muted-foreground">
+                          <UserRound className="h-4 w-4" />
+                        </div>
+                        My Profile
+                      </Link>
+                      <button
+                        onClick={handleLogout}
+                        className="flex items-center gap-3 w-full text-left rounded-xl px-3 py-2.5 text-sm font-bold text-destructive hover:bg-destructive/10 transition-all mt-1"
+                      >
+                        <div className="h-8 w-8 rounded-lg bg-destructive/10 flex items-center justify-center">
+                          <X className="h-4 w-4" />
+                        </div>
+                        Sign Out
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

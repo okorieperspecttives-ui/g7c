@@ -32,6 +32,17 @@ export type ProductSpecMinimal = {
   value: string;
 };
 
+// User related
+export type User = Database['public']['Tables']['users']['Row'];
+export type UserInsert = Database['public']['Tables']['users']['Insert'];
+export type UserUpdate = Database['public']['Tables']['users']['Update'];
+
+// Enhanced type for use in components (with auth user data)
+export type UserProfile = User & {
+  email?: string; // from auth.users
+  user_metadata?: any;
+};
+
 // Cart related
 export type CartItem = Product & {
   quantity: number;
