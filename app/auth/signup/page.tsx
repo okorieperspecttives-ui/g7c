@@ -48,32 +48,24 @@ export default function SignupPage() {
   });
 
   const onSubmit = async (data: AuthFormData) => {
-    if (
-      process.env.NEXT_PUBLIC_SUPABASE_URL === "your-project-url" ||
-      !process.env.NEXT_PUBLIC_SUPABASE_URL
-    ) {
-      setError(
-        "Supabase is not configured. Please add your credentials to .env.local",
-      );
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      setError("Supabase is not configured. Please add your credentials to .env.local");
       return;
     }
     setIsLoading(true);
     setError(null);
     try {
-      const { data: authData, error } = await supabase.auth.signUp({
+      const { error } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
         options: {
           emailRedirectTo: `${window.location.origin}/auth/callback`,
-          data: {
-            full_name: data.email.split("@")[0], // Default name from email
-          },
         },
       });
 
       if (error) throw error;
 
-      router.push("/dashboard");
+      router.push("/");
       router.refresh();
     } catch (err: any) {
       setError(err.message || "An error occurred during signup");
@@ -83,13 +75,8 @@ export default function SignupPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (
-      process.env.NEXT_PUBLIC_SUPABASE_URL === "your-project-url" ||
-      !process.env.NEXT_PUBLIC_SUPABASE_URL
-    ) {
-      setError(
-        "Supabase is not configured. Please add your credentials to .env.local",
-      );
+    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+      setError("Supabase is not configured. Please add your credentials to .env.local");
       return;
     }
     try {
