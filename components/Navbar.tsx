@@ -18,7 +18,7 @@ import { CATEGORIES, PRODUCTS, formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { createClient } from "@/lib/supabase";
 import Image from "next/image";
-import { User } from "@supabase/supabase-js";
+import { User, AuthChangeEvent, Session } from "@supabase/supabase-js";
 
 const navigationLinks = [
   { label: "Shop", href: "/shop" },
@@ -120,7 +120,7 @@ const GlobalSearch = () => {
     return PRODUCTS.filter(
       (p) =>
         p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase()),
+        (p.description?.toLowerCase().includes(query.toLowerCase()) ?? false),
     ).slice(0, 8);
   }, [query]);
 
@@ -231,35 +231,46 @@ const GlobalSearch = () => {
                 <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {results.length > 0 ? (
                     <div className="flex flex-col gap-2">
-                      {results.map((product) => (
-                        <Link
-                          key={product.id}
-                          href={`/products/${product.id}`}
-                          onClick={() => {
-                            setIsOpen(false);
-                            setQuery("");
-                          }}
-                          className="flex items-center gap-4 rounded-2xl p-3 transition-colors hover:bg-secondary group"
-                        >
-                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
-                            <Image
-                              src={product.image}
-                              alt={product.name}
-                              fill
-                              className="object-contain p-2"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                              {product.name}
-                            </h4>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              {formatNaira(product.price)}
-                            </p>
-                          </div>
-                          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all" />
-                        </Link>
-                      ))}
+                      {results.map((product) => {
+                        const price =
+                          (product as any).markup_price ||
+                          (product as any).price ||
+                          0;
+                        const image =
+                          (product as any).main_image ||
+                          (product as any).image ||
+                          "";
+
+                        return (
+                          <Link
+                            key={product.id}
+                            href={`/products/${product.id}`}
+                            onClick={() => {
+                              setIsOpen(false);
+                              setQuery("");
+                            }}
+                            className="flex items-center gap-4 rounded-2xl p-3 transition-colors hover:bg-secondary group"
+                          >
+                            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
+                              <Image
+                                src={image}
+                                alt={product.name}
+                                fill
+                                className="object-contain p-2"
+                              />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h4 className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">
+                                {product.name}
+                              </h4>
+                              <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
+                                {formatNaira(price)}
+                              </p>
+                            </div>
+                            <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all" />
+                          </Link>
+                        );
+                      })}
                     </div>
                   ) : query.length >= 2 ? (
                     <div className="py-12 text-center">
@@ -311,9 +322,11 @@ const Navbar = () => {
     try {
       const {
         data: { subscription },
-      } = supabase.auth.onAuthStateChange((_event, session) => {
-        setUser(session?.user ?? null);
-      });
+      } = supabase.auth.onAuthStateChange(
+        (_event: AuthChangeEvent, session: Session | null) => {
+          setUser(session?.user ?? null);
+        },
+      );
       return () => subscription.unsubscribe();
     } catch (err) {
       console.warn("Supabase auth subscription failed:", err);

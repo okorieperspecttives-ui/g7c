@@ -47,9 +47,15 @@ export default function LoginPage() {
     resolver: zodResolver(authSchema),
   });
 
+  const isSupabaseConfigured =
+    process.env.NEXT_PUBLIC_SUPABASE_URL &&
+    process.env.NEXT_PUBLIC_SUPABASE_URL !== "your-project-url";
+
   const onSubmit = async (data: AuthFormData) => {
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      setError("Supabase is not configured. Please add your credentials to .env.local");
+    if (!isSupabaseConfigured) {
+      setError(
+        "Supabase is not configured. Please add your credentials to .env.local",
+      );
       return;
     }
     setIsLoading(true);
@@ -72,8 +78,10 @@ export default function LoginPage() {
   };
 
   const handleGoogleLogin = async () => {
-    if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      setError("Supabase is not configured. Please add your credentials to .env.local");
+    if (!isSupabaseConfigured) {
+      setError(
+        "Supabase is not configured. Please add your credentials to .env.local",
+      );
       return;
     }
     try {
@@ -87,6 +95,15 @@ export default function LoginPage() {
     } catch (err: any) {
       setError(err.message || "An error occurred with Google login");
     }
+  };
+
+  const handleDemoLogin = () => {
+    // This is purely for UI demonstration when Supabase is not configured
+    setIsLoading(true);
+    setTimeout(() => {
+      router.push("/");
+      setIsLoading(false);
+    }, 1000);
   };
 
   return (
@@ -108,6 +125,15 @@ export default function LoginPage() {
         {error && (
           <div className="mb-6 p-4 rounded-2xl bg-destructive/10 border border-destructive/20 text-destructive text-sm font-medium">
             {error}
+            {!isSupabaseConfigured && (
+              <button
+                type="button"
+                onClick={handleDemoLogin}
+                className="mt-3 block w-full rounded-xl bg-primary/10 py-2 text-xs font-bold text-primary hover:bg-primary/20 transition-all"
+              >
+                Skip to Home (Demo Mode)
+              </button>
+            )}
           </div>
         )}
 

@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatNaira, Product, PRODUCTS } from "@/lib/products";
+import { formatNaira, PRODUCTS } from "@/lib/products";
+import { Product } from "@/lib/types";
 import {
   ChevronLeft,
   ShoppingCart,
@@ -27,22 +28,34 @@ interface ProductClientProps {
 }
 
 export default function ProductClient({ product }: { product: Product }) {
+  const price = (product as any).markup_price || (product as any).price || 0;
+  const originalPrice =
+    (product as any).base_price || (product as any).originalPrice || price;
+  const image = (product as any).main_image || (product as any).image || "";
+  const category =
+    (product as any).category_name || (product as any).category || "";
+  const brand = (product as any).brand_name || (product as any).brand || "";
+  const features = (product as any).features || [];
+  const specifications = (product as any).specifications || [];
+
   // Find related products (same category)
   const relatedProducts = useMemo(() => {
-    const sameCategory = PRODUCTS.filter(
-      (p) => p.category === product.category && p.id !== product.id,
-    );
+    const sameCategory = PRODUCTS.filter((p) => {
+      const pCategory = (p as any).category_name || (p as any).category || "";
+      return pCategory === category && p.id !== product.id;
+    });
 
     if (sameCategory.length >= 6) {
       return sameCategory.slice(0, 6);
     }
 
-    const others = PRODUCTS.filter(
-      (p) => p.category !== product.category && p.id !== product.id,
-    );
+    const others = PRODUCTS.filter((p) => {
+      const pCategory = (p as any).category_name || (p as any).category || "";
+      return pCategory !== category && p.id !== product.id;
+    });
     // Shuffle others slightly or just take from start
     return [...sameCategory, ...others].slice(0, 6);
-  }, [product]);
+  }, [product, category]);
 
   const [quantity, setQuantity] = useState(1);
   const [isInstallmentOpen, setIsInstallmentOpen] = useState(false);
@@ -66,16 +79,16 @@ export default function ProductClient({ product }: { product: Product }) {
     "@context": "https://schema.org/",
     "@type": "Product",
     name: product.name,
-    image: product.image,
+    image: image,
     description: product.description,
     brand: {
       "@type": "Brand",
-      name: product.brand,
+      name: brand,
     },
     offers: {
       "@type": "Offer",
       priceCurrency: "NGN",
-      price: product.price,
+      price: price,
       availability: "https://schema.org/InStock",
     },
   };
@@ -101,7 +114,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="flex flex-col gap-4">
             <div className="relative aspect-square overflow-hidden rounded-3xl border border-border bg-card">
               <Image
-                src={product.image}
+                src={image}
                 alt={product.name}
                 fill
                 className="object-contain p-8"
@@ -116,7 +129,7 @@ export default function ProductClient({ product }: { product: Product }) {
                   className="relative aspect-square cursor-pointer rounded-2xl border border-border bg-card opacity-50 transition-all hover:border-primary hover:opacity-100"
                 >
                   <Image
-                    src={product.image}
+                    src={image}
                     alt={product.name}
                     fill
                     className="object-contain p-2"
@@ -130,7 +143,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="flex flex-col">
             <div className="mb-4 flex flex-wrap items-center gap-4">
               <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
-                {product.category}
+                {category}
               </span>
               <span className="flex items-center gap-1 text-sm font-bold text-muted-foreground">
                 <Star className="h-4 w-4 fill-primary text-primary" />
@@ -146,8 +159,7 @@ export default function ProductClient({ product }: { product: Product }) {
               {product.name}
             </h1>
             <p className="mb-6 text-xl font-medium text-muted-foreground">
-              Brand:{" "}
-              <span className="text-primary font-bold">{product.brand}</span>
+              Brand: <span className="text-primary font-bold">{brand}</span>
             </p>
 
             <p className="mb-8 text-lg leading-relaxed text-muted-foreground sm:text-xl">
@@ -156,10 +168,10 @@ export default function ProductClient({ product }: { product: Product }) {
 
             <div className="mb-10 flex items-baseline gap-4">
               <span className="text-4xl font-bold text-primary">
-                {formatNaira(product.price)}
+                {formatNaira(price)}
               </span>
               <span className="text-xl text-muted-foreground line-through opacity-50">
-                {formatNaira(product.originalPrice)}
+                {formatNaira(originalPrice)}
               </span>
             </div>
 
@@ -241,7 +253,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="overflow-hidden rounded-3xl border border-border bg-card">
             <table className="w-full text-left">
               <tbody>
-                {product.specifications.map((spec, i) => (
+                {specifications.map((spec: any, i: number) => (
                   <tr
                     key={spec.label}
                     className={i % 2 === 0 ? "bg-background/50" : ""}
@@ -265,7 +277,7 @@ export default function ProductClient({ product }: { product: Product }) {
             Key Features
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {product.features.map((feature, i) => (
+            {features.map((feature: string, i: number) => (
               <div
                 key={i}
                 className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6"
@@ -324,7 +336,7 @@ export default function ProductClient({ product }: { product: Product }) {
       <InstallmentModal
         isOpen={isInstallmentOpen}
         onClose={() => setIsInstallmentOpen(false)}
-        productPrice={product.price}
+        productPrice={price}
         productName={product.name}
       />
     </main>
