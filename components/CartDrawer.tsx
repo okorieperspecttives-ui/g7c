@@ -199,6 +199,5 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
     </>
   );
 };
-};
 
 export default CartDrawer;
