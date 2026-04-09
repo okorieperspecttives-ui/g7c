@@ -2,10 +2,7 @@ import { createBrowserClient } from '@supabase/ssr'
 
 export const createClient = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;   // ← Must match .env.local
-
-  console.log('Supabase URL:', supabaseUrl ? '✅ Loaded' : '❌ Missing');
-  console.log('Supabase Anon Key:', supabaseAnonKey ? '✅ Loaded' : '❌ Missing');
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
   if (!supabaseUrl || !supabaseAnonKey) {
     throw new Error(
@@ -16,4 +13,16 @@ export const createClient = () => {
   }
 
   return createBrowserClient(supabaseUrl, supabaseAnonKey);
+};
+
+/**
+ * Helper to get the public URL for a file in Supabase Storage.
+ * @param bucket The name of the storage bucket ('product-images' or 'avatars')
+ * @param path The path to the file within the bucket
+ * @returns The public URL string
+ */
+export const getPublicUrl = (bucket: 'product-images' | 'avatars', path: string) => {
+  const supabase = createClient();
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
 };

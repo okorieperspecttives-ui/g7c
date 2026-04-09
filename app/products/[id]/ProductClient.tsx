@@ -4,8 +4,9 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatNaira, PRODUCTS } from "@/lib/products";
+import { formatNaira } from "@/lib/products";
 import { Product } from "@/lib/types";
+import { getPublicUrl } from "@/lib/supabase";
 import {
   ChevronLeft,
   ShoppingCart,
@@ -24,38 +25,30 @@ import InstallmentModal from "@/components/InstallmentModal";
 
 interface ProductClientProps {
   product: Product;
-  relatedProducts: Product[];
 }
 
 export default function ProductClient({ product }: { product: Product }) {
-  const price = (product as any).markup_price || (product as any).price || 0;
-  const originalPrice =
-    (product as any).base_price || (product as any).originalPrice || price;
-  const image = (product as any).main_image || (product as any).image || "";
-  const category =
-    (product as any).category_name || (product as any).category || "";
-  const brand = (product as any).brand_name || (product as any).brand || "";
-  const features = (product as any).features || [];
-  const specifications = (product as any).specifications || [];
+  const price = product.markup_price || 0;
+  const originalPrice = product.base_price || price;
+  
+  const imageUrl = useMemo(() => {
+    const rawImage = product.main_image || "";
+    if (!rawImage) return "/assets/placeholder.jpg";
+    if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
+    return getPublicUrl("product-images", rawImage);
+  }, [product.main_image]);
+
+  const category = product.category_name || (product as any).category?.name || "Energy";
+  const brand = product.brand_name || (product as any).brand?.name || "Global 7CS";
+  const features = (product.features as string[]) || [];
+  const specifications = product.specifications || [];
 
   // Find related products (same category)
-  const relatedProducts = useMemo(() => {
-    const sameCategory = PRODUCTS.filter((p) => {
-      const pCategory = (p as any).category_name || (p as any).category || "";
-      return pCategory === category && p.id !== product.id;
-    });
-
-    if (sameCategory.length >= 6) {
-      return sameCategory.slice(0, 6);
-    }
-
-    const others = PRODUCTS.filter((p) => {
-      const pCategory = (p as any).category_name || (p as any).category || "";
-      return pCategory !== category && p.id !== product.id;
-    });
-    // Shuffle others slightly or just take from start
-    return [...sameCategory, ...others].slice(0, 6);
-  }, [product, category]);
+  const relatedProducts = useMemo<Product[]>(() => {
+    // If we don't have enough data yet, we'll return empty for now
+    // In a real scenario, you might want to fetch these from Supabase too
+    return [];
+  }, []);
 
   const [quantity, setQuantity] = useState(1);
   const [isInstallmentOpen, setIsInstallmentOpen] = useState(false);
@@ -79,7 +72,7 @@ export default function ProductClient({ product }: { product: Product }) {
     "@context": "https://schema.org/",
     "@type": "Product",
     name: product.name,
-    image: image,
+    image: imageUrl,
     description: product.description,
     brand: {
       "@type": "Brand",
@@ -114,7 +107,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="flex flex-col gap-4">
             <div className="relative aspect-square overflow-hidden rounded-3xl border border-border bg-card">
               <Image
-                src={image}
+                src={imageUrl}
                 alt={product.name}
                 fill
                 className="object-contain p-8"
@@ -129,7 +122,7 @@ export default function ProductClient({ product }: { product: Product }) {
                   className="relative aspect-square cursor-pointer rounded-2xl border border-border bg-card opacity-50 transition-all hover:border-primary hover:opacity-100"
                 >
                   <Image
-                    src={image}
+                    src={imageUrl}
                     alt={product.name}
                     fill
                     className="object-contain p-2"

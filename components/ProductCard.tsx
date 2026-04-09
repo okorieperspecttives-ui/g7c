@@ -7,8 +7,9 @@ import { formatNaira } from "@/lib/products";
 import { Product } from "@/lib/types";
 import { ShoppingCart, CreditCard, Plus } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import InstallmentModal from "./InstallmentModal";
+import { getPublicUrl } from "@/lib/supabase";
 
 interface ProductCardProps {
   product: Product;
@@ -39,13 +40,18 @@ const ProductCard = ({ product }: ProductCardProps) => {
     setIsInstallmentOpen(true);
   };
 
-  const price = (product as any).markup_price || (product as any).price || 0;
-  const originalPrice =
-    (product as any).base_price || (product as any).originalPrice || price;
-  const image = (product as any).main_image || (product as any).image || "";
-  const category =
-    (product as any).category_name || (product as any).category || "";
-  const brand = (product as any).brand_name || (product as any).brand || "";
+  // Get public URL if it's a storage path, otherwise use as is (for assets/ legacy support)
+  const imageUrl = useMemo(() => {
+    const rawImage = product.main_image || "";
+    if (!rawImage) return "/assets/placeholder.jpg";
+    if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
+    return getPublicUrl("product-images", rawImage);
+  }, [product.main_image]);
+
+  const price = product.markup_price || 0;
+  const originalPrice = product.base_price || price;
+  const category = product.category_name || (product as any).category?.name || "Energy";
+  const brand = product.brand_name || (product as any).brand?.name || "Global 7CS";
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/10">
@@ -55,7 +61,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         className="relative aspect-square overflow-hidden bg-muted"
       >
         <Image
-          src={image}
+          src={imageUrl}
           alt={product.name}
           fill
           className="object-cover transition-transform duration-500 group-hover:scale-110"

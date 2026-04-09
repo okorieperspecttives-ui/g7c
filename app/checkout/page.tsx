@@ -188,7 +188,7 @@ export default function CheckoutPage() {
                   {items.map((item) => (
                     <div key={item.id} className="flex justify-between gap-4">
                       <span className="text-sm text-muted-foreground flex-1 line-clamp-1">{item.quantity}x {item.name}</span>
-                      <span className="text-sm font-bold text-foreground">{formatNaira(item.price * item.quantity)}</span>
+                      <span className="text-sm font-bold text-foreground">{formatNaira(item.markup_price * item.quantity)}</span>
                     </div>
                   ))}
                 </div>
@@ -197,7 +197,7 @@ export default function CheckoutPage() {
               <div className="p-8 space-y-4 bg-card">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
-                  <span className="font-bold text-foreground">{formatNaira(subtotal)}</span>
+                 <span className="font-bold text-foreground">{formatNaira(subtotal)}</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Delivery Fee</span>

@@ -24,6 +24,9 @@ export type ProductWithBrandAndCategory = Product & {
 // For product detail pages
 export type ProductDetail = ProductWithBrandAndCategory & {
   product_specs: ProductSpec[];
+  brand_name?: string;
+  category_name?: string;
+  specifications?: ProductSpecMinimal[];
 };
 
 // Simplified specification for generic UI components

@@ -5,8 +5,9 @@ import Link from "next/link";
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, X } from "lucide-react";
 import { formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { getPublicUrl } from "@/lib/supabase";
 
 export default function CartPage() {
   const { items, updateQuantity, removeFromCart, clearCart, getSubtotal } = useCartStore();
@@ -56,9 +57,15 @@ export default function CartPage() {
           {/* Cart Items List */}
           <div className="lg:col-span-2 space-y-6">
             {items.map((item) => {
-              const price = (item as any).markup_price || (item as any).price || 0;
-              const image = (item as any).main_image || (item as any).image || "";
-              const brand = (item as any).brand_name || (item as any).brand || "";
+              const price = item.markup_price || 0;
+              const brand = item.brand_name || "Global 7CS";
+              
+              const imageUrl = (() => {
+                const rawImage = item.main_image || "";
+                if (!rawImage) return "/assets/placeholder.jpg";
+                if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
+                return getPublicUrl("product-images", rawImage);
+              })();
 
               return (
                 <div 
@@ -66,7 +73,7 @@ export default function CartPage() {
                   className="flex flex-col sm:flex-row gap-6 rounded-3xl border border-border bg-card p-6 transition-all hover:border-primary/50"
                 >
                   <div className="relative h-32 w-full sm:w-32 flex-shrink-0 overflow-hidden rounded-2xl border border-border bg-muted">
-                    <Image src={image} alt={item.name} fill className="object-contain p-4" />
+                    <Image src={imageUrl} alt={item.name} fill className="object-contain p-4" />
                   </div>
                   
                   <div className="flex flex-1 flex-col justify-between">
