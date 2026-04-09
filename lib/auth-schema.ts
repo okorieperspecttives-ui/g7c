@@ -1,6 +1,11 @@
 import { z } from "zod";
 
-export const authSchema = z.object({
+export const loginSchema = z.object({
+  email: z.string().email("Invalid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export const signupSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z
     .string()
@@ -11,4 +16,5 @@ export const authSchema = z.object({
     .regex(/[^A-Za-z0-9]/, "At least one special character"),
 });
 
-export type AuthFormData = z.infer<typeof authSchema>;
+export type LoginFormData = z.infer<typeof loginSchema>;
+export type SignupFormData = z.infer<typeof signupSchema>;

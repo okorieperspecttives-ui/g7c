@@ -4,7 +4,8 @@ import { useState, useMemo } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { formatNaira, Product, PRODUCTS } from "@/lib/products";
+import { formatNaira, PRODUCTS } from "@/lib/products";
+import { Product, ProductSpecMinimal } from "@/lib/types";
 import {
   ChevronLeft,
   ShoppingCart,
@@ -23,14 +24,13 @@ import InstallmentModal from "@/components/InstallmentModal";
 
 interface ProductClientProps {
   product: Product;
-  relatedProducts: Product[];
 }
 
 export default function ProductClient({ product }: { product: Product }) {
   // Find related products (same category)
   const relatedProducts = useMemo(() => {
     const sameCategory = PRODUCTS.filter(
-      (p) => p.category === product.category && p.id !== product.id,
+      (p) => p.category_name === product.category_name && p.id !== product.id,
     );
 
     if (sameCategory.length >= 6) {
@@ -38,7 +38,7 @@ export default function ProductClient({ product }: { product: Product }) {
     }
 
     const others = PRODUCTS.filter(
-      (p) => p.category !== product.category && p.id !== product.id,
+      (p) => p.category_name !== product.category_name && p.id !== product.id,
     );
     // Shuffle others slightly or just take from start
     return [...sameCategory, ...others].slice(0, 6);
@@ -66,16 +66,16 @@ export default function ProductClient({ product }: { product: Product }) {
     "@context": "https://schema.org/",
     "@type": "Product",
     name: product.name,
-    image: product.image,
+    image: product.main_image || "",
     description: product.description,
     brand: {
       "@type": "Brand",
-      name: product.brand,
+      name: product.brand_name || "Generic",
     },
     offers: {
       "@type": "Offer",
       priceCurrency: "NGN",
-      price: product.price,
+      price: product.markup_price,
       availability: "https://schema.org/InStock",
     },
   };
@@ -101,7 +101,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="flex flex-col gap-4">
             <div className="relative aspect-square overflow-hidden rounded-3xl border border-border bg-card">
               <Image
-                src={image}
+                src={product.main_image || "/placeholder.jpg"}
                 alt={product.name}
                 fill
                 className="object-contain p-8"
@@ -116,7 +116,7 @@ export default function ProductClient({ product }: { product: Product }) {
                   className="relative aspect-square cursor-pointer rounded-2xl border border-border bg-card opacity-50 transition-all hover:border-primary hover:opacity-100"
                 >
                   <Image
-                    src={product.image}
+                    src={product.main_image || "/placeholder.jpg"}
                     alt={product.name}
                     fill
                     className="object-contain p-2"
@@ -130,7 +130,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="flex flex-col">
             <div className="mb-4 flex flex-wrap items-center gap-4">
               <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
-                {category}
+                {product.category_name || "Energy Solution"}
               </span>
               <span className="flex items-center gap-1 text-sm font-bold text-muted-foreground">
                 <Star className="h-4 w-4 fill-primary text-primary" />
@@ -147,7 +147,7 @@ export default function ProductClient({ product }: { product: Product }) {
             </h1>
             <p className="mb-6 text-xl font-medium text-muted-foreground">
               Brand:{" "}
-              <span className="text-primary font-bold">{product.brand}</span>
+              <span className="text-primary font-bold">{product.brand_name || "Generic"}</span>
             </p>
 
             <p className="mb-8 text-lg leading-relaxed text-muted-foreground sm:text-xl">
@@ -156,10 +156,10 @@ export default function ProductClient({ product }: { product: Product }) {
 
             <div className="mb-10 flex items-baseline gap-4">
               <span className="text-4xl font-bold text-primary">
-                {formatNaira(price)}
+                {formatNaira(product.markup_price)}
               </span>
               <span className="text-xl text-muted-foreground line-through opacity-50">
-                {formatNaira(originalPrice)}
+                {formatNaira(product.base_price)}
               </span>
             </div>
 
@@ -234,58 +234,62 @@ export default function ProductClient({ product }: { product: Product }) {
         </div>
 
         {/* Technical Specifications Table */}
-        <div className="mt-20">
-          <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
-            Technical Specifications
-          </h2>
-          <div className="overflow-hidden rounded-3xl border border-border bg-card">
-            <table className="w-full text-left">
-              <tbody>
-                {product.specifications.map((spec, i) => (
-                  <tr
-                    key={spec.label}
-                    className={i % 2 === 0 ? "bg-background/50" : ""}
-                  >
-                    <td className="px-6 py-4 text-sm font-bold text-muted-foreground uppercase">
-                      {spec.label}
-                    </td>
-                    <td className="px-6 py-4 text-sm font-medium text-foreground">
-                      {spec.value}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+        {product.specifications && product.specifications.length > 0 && (
+          <div className="mt-20">
+            <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
+              Technical Specifications
+            </h2>
+            <div className="overflow-hidden rounded-3xl border border-border bg-card">
+              <table className="w-full text-left">
+                <tbody>
+                  {product.specifications.map((spec: ProductSpecMinimal, i: number) => (
+                    <tr
+                      key={spec.label}
+                      className={i % 2 === 0 ? "bg-background/50" : ""}
+                    >
+                      <td className="px-6 py-4 text-sm font-bold text-muted-foreground uppercase">
+                        {spec.label}
+                      </td>
+                      <td className="px-6 py-4 text-sm font-medium text-foreground">
+                        {spec.value}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Features Grid */}
-        <div className="mt-20">
-          <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
-            Key Features
-          </h2>
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {product.features.map((feature, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6"
-              >
-                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                  {i % 3 === 0 ? (
-                    <ShieldCheck className="h-6 w-6" />
-                  ) : i % 3 === 1 ? (
-                    <Zap className="h-6 w-6" />
-                  ) : (
-                    <Battery className="h-6 w-6" />
-                  )}
+        {Array.isArray(product.features) && product.features.length > 0 && (
+          <div className="mt-20">
+            <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
+              Key Features
+            </h2>
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {(product.features as string[]).map((feature, i) => (
+                <div
+                  key={i}
+                  className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6"
+                >
+                  <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    {i % 3 === 0 ? (
+                      <ShieldCheck className="h-6 w-6" />
+                    ) : i % 3 === 1 ? (
+                      <Zap className="h-6 w-6" />
+                    ) : (
+                      <Battery className="h-6 w-6" />
+                    )}
+                  </div>
+                  <span className="text-lg font-bold text-foreground">
+                    {feature}
+                  </span>
                 </div>
-                <span className="text-lg font-bold text-foreground">
-                  {feature}
-                </span>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
+        )}
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (
@@ -324,7 +328,7 @@ export default function ProductClient({ product }: { product: Product }) {
       <InstallmentModal
         isOpen={isInstallmentOpen}
         onClose={() => setIsInstallmentOpen(false)}
-        productPrice={product.price}
+        productPrice={product.markup_price}
         productName={product.name}
       />
     </main>

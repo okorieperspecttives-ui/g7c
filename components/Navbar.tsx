@@ -120,7 +120,7 @@ const GlobalSearch = () => {
     return PRODUCTS.filter(
       (p) =>
         p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.description.toLowerCase().includes(query.toLowerCase()),
+        p.description?.toLowerCase().includes(query.toLowerCase()),
     ).slice(0, 8);
   }, [query]);
 
@@ -243,7 +243,7 @@ const GlobalSearch = () => {
                         >
                           <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
                             <Image
-                              src={product.image}
+                              src={product.main_image || ""}
                               alt={product.name}
                               fill
                               className="object-contain p-2"
@@ -254,7 +254,7 @@ const GlobalSearch = () => {
                               {product.name}
                             </h4>
                             <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              {formatNaira(product.price)}
+                              {formatNaira(product.markup_price)}
                             </p>
                           </div>
                           <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all" />

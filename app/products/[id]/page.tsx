@@ -11,11 +11,11 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
   return {
     title: product.name,
-    description: product.description,
+    description: product.description || undefined,
     openGraph: {
       title: product.name,
-      description: product.description,
-      images: [{ url: product.image }],
+      description: product.description || undefined,
+      images: [{ url: product.main_image || "" }],
     },
   };
 }

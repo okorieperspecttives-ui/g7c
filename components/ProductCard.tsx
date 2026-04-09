@@ -39,13 +39,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
     setIsInstallmentOpen(true);
   };
 
-  const price = (product as any).markup_price || (product as any).price || 0;
-  const originalPrice =
-    (product as any).base_price || (product as any).originalPrice || price;
-  const image = (product as any).main_image || (product as any).image || "";
-  const category =
-    (product as any).category_name || (product as any).category || "";
-  const brand = (product as any).brand_name || (product as any).brand || "";
+  const price = product.markup_price || 0;
+  const originalPrice = product.base_price || price;
+  const image = product.main_image || "";
+  const category = product.category_name || "";
+  const brand = product.brand_name || "";
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/10">

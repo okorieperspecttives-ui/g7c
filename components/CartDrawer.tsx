@@ -62,12 +62,12 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                     {items.map((item) => (
                       <div key={item.id} className="flex gap-4">
                         <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-card">
-                          <Image src={item.image} alt={item.name} fill className="object-contain p-2" />
+                          <Image src={item.main_image || ""} alt={item.name} fill className="object-contain p-2" />
                         </div>
                         <div className="flex flex-1 flex-col justify-between">
                           <div>
                             <h4 className="text-sm font-bold text-foreground line-clamp-1">{item.name}</h4>
-                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{item.brand}</p>
+                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{item.brand_name || "Generic"}</p>
                           </div>
                           <div className="flex items-center justify-between">
                             <div className="flex items-center rounded-lg border border-border bg-card p-1 scale-90 -ml-2">
@@ -86,7 +86,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                               </button>
                             </div>
                             <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold text-primary">{formatNaira(item.price)}</span>
+                              <span className="text-sm font-bold text-primary">{formatNaira(item.markup_price)}</span>
                               <button 
                                 onClick={() => removeFromCart(item.id)}
                                 className="text-muted-foreground hover:text-destructive transition-colors"

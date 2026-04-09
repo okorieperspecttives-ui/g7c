@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { authSchema, AuthFormData } from "@/lib/auth-schema";
+import { loginSchema, LoginFormData } from "@/lib/auth-schema";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -43,11 +43,11 @@ export default function LoginPage() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<AuthFormData>({
-    resolver: zodResolver(authSchema),
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
   });
 
-  const onSubmit = async (data: AuthFormData) => {
+  const onSubmit = async (data: LoginFormData) => {
     if (process.env.NEXT_PUBLIC_SUPABASE_URL === 'your-project-url' || !process.env.NEXT_PUBLIC_SUPABASE_URL) {
       setError("Supabase is not configured. Please add your credentials to .env.local");
       return;
