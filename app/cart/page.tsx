@@ -62,7 +62,7 @@ export default function CartPage() {
               
               const imageUrl = (() => {
                 const rawImage = item.main_image || "";
-                if (!rawImage) return "/assets/placeholder.jpg";
+                if (!rawImage) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
                 if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
                 return getPublicUrl("product-images", rawImage);
               })();

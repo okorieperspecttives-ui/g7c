@@ -66,7 +66,7 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                       const brand = (item as any).brand_name || (item as any).brand || "";
 
                       const imageUrl = (() => {
-                        if (!rawImage) return "/assets/placeholder.jpg";
+                        if (!rawImage) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
                         if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
                         return getPublicUrl("product-images", rawImage);
                       })();

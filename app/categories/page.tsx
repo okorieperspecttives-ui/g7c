@@ -1,9 +1,7 @@
-"use client";
-
-import { CATEGORIES } from "@/lib/products";
 import { Zap, Battery, Box, Plug, Sun, Settings, ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import { getCategories } from "@/lib/supabase/products";
 
 const ICON_MAP: Record<string, any> = {
   Zap,
@@ -14,7 +12,9 @@ const ICON_MAP: Record<string, any> = {
   Settings,
 };
 
-export default function CategoriesPage() {
+export default async function CategoriesPage() {
+  const categories = await getCategories();
+
   return (
     <main className="min-h-screen bg-background pt-32 pb-20 px-4 sm:px-6 lg:px-8">
       <div className="mx-auto max-w-screen-2xl">
@@ -37,11 +37,20 @@ export default function CategoriesPage() {
         </div>
 
         <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {CATEGORIES.map((category, i) => {
-            const Icon = ICON_MAP[category.icon];
+          {categories.map((category, i) => {
+            // Map icons based on category name if tag isn't available
+            const iconKey = (category as any).icon || (
+              category.name.includes("Inverter") ? "Zap" :
+              category.name.includes("Battery") ? "Battery" :
+              category.name.includes("Station") ? "Plug" :
+              category.name.includes("Solar") ? "Sun" :
+              category.name.includes("System") ? "Box" : "Settings"
+            );
+            const Icon = ICON_MAP[iconKey];
+
             return (
               <motion.div
-                key={category.name}
+                key={category.id}
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 transition={{ delay: i * 0.1 }}
@@ -57,7 +66,7 @@ export default function CategoriesPage() {
                     {category.name}
                   </h2>
                   <p className="mb-10 text-lg text-muted-foreground leading-relaxed">
-                    {category.tagline}
+                    {category.tagline || category.description || "Explore our selection."}
                   </p>
                   <div className="mt-auto flex items-center gap-3 text-sm font-black uppercase tracking-widest text-primary">
                     Browse Selection

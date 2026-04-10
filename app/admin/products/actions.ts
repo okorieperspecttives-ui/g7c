@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient, getUserProfile } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -11,7 +12,9 @@ export async function createProduct(formData: FormData) {
     return { error: "Unauthorized. Admin access required." };
   }
 
-  const supabase = await createClient();
+  // Use admin client to bypass RLS for administrative actions
+  const supabase = await createAdminClient();
+  const anonClient = await createClient(); // For storage upload which might need session context
 
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
@@ -38,7 +41,7 @@ export async function createProduct(formData: FormData) {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `products/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await anonClient.storage
       .from("product-images")
       .upload(filePath, featuredImageFile);
 
@@ -60,7 +63,7 @@ export async function createProduct(formData: FormData) {
       const fileName = `${Math.random()}.${fileExt}`;
       const filePath = `products/gallery/${fileName}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await anonClient.storage
         .from("product-images")
         .upload(filePath, file);
 
@@ -126,7 +129,9 @@ export async function updateProduct(id: string, formData: FormData) {
     return { error: "Unauthorized. Admin access required." };
   }
 
-  const supabase = await createClient();
+  // Use admin client to bypass RLS for administrative actions
+  const supabase = await createAdminClient();
+  const anonClient = await createClient(); // For storage upload which might need session context
 
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
@@ -169,7 +174,7 @@ export async function updateProduct(id: string, formData: FormData) {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `products/${fileName}`;
 
-    const { error: uploadError } = await supabase.storage
+    const { error: uploadError } = await anonClient.storage
       .from("product-images")
       .upload(filePath, featuredImageFile);
 
@@ -188,7 +193,7 @@ export async function updateProduct(id: string, formData: FormData) {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `products/gallery/${fileName}`;
 
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError } = await anonClient.storage
           .from("product-images")
           .upload(filePath, file);
 
@@ -199,7 +204,7 @@ export async function updateProduct(id: string, formData: FormData) {
     }
 
     if (newGallery.length > 0) {
-      updateData.gallery_images = [...existingGallery, ...newGallery];
+      updateData.gallery_images = [...new Set([...existingGallery, ...newGallery])];
     }
   }
 
@@ -219,7 +224,7 @@ export async function updateProduct(id: string, formData: FormData) {
       certifications,
       is_active,
       ...(updateData.main_image ? { main_image: updateData.main_image } : {}),
-      gallery_images: updateData.gallery_images || existingGallery,
+      gallery_images: updateData.gallery_images,
     })
     .eq("id", id);
 
@@ -263,7 +268,8 @@ export async function deleteProduct(id: string) {
     return { error: "Unauthorized. Admin access required." };
   }
 
-  const supabase = await createClient();
+  // Use admin client to bypass RLS for administrative actions
+  const supabase = await createAdminClient();
 
   const { error } = await (supabase.from("products") as any)
     .delete()

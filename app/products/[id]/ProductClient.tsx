@@ -31,12 +31,38 @@ export default function ProductClient({ product }: { product: Product }) {
   const price = product.markup_price || 0;
   const originalPrice = product.base_price || price;
   
-  const imageUrl = useMemo(() => {
-    const rawImage = product.main_image || "";
-    if (!rawImage) return "/assets/placeholder.jpg";
-    if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
-    return getPublicUrl("product-images", rawImage);
-  }, [product.main_image]);
+  // Gallery Logic
+  const galleryImages = useMemo(() => {
+    const images: string[] = [];
+    
+    // Add main image first
+    if (product.main_image) {
+      images.push(product.main_image);
+    }
+    
+    // Add gallery images from DB
+    if (product.gallery_images && Array.isArray(product.gallery_images)) {
+      product.gallery_images.forEach((img: any) => {
+        if (typeof img === 'string' && img.trim() !== '') {
+          images.push(img);
+        }
+      });
+    }
+    
+    return images;
+  }, [product.main_image, product.gallery_images]);
+
+  const [activeImage, setActiveImage] = useState(0);
+
+  const getImageUrl = (path: string) => {
+    if (!path) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
+    if (path.startsWith("http") || path.startsWith("/")) return path;
+    return getPublicUrl("product-images", path);
+  };
+
+  const activeImageUrl = useMemo(() => {
+    return getImageUrl(galleryImages[activeImage] || product.main_image || "");
+  }, [galleryImages, activeImage, product.main_image]);
 
   const category = product.category_name || (product as any).category?.name || "Energy";
   const brand = product.brand_name || (product as any).brand?.name || "Global 7CS";
@@ -72,7 +98,7 @@ export default function ProductClient({ product }: { product: Product }) {
     "@context": "https://schema.org/",
     "@type": "Product",
     name: product.name,
-    image: imageUrl,
+    image: activeImageUrl,
     description: product.description,
     brand: {
       "@type": "Brand",
@@ -103,33 +129,43 @@ export default function ProductClient({ product }: { product: Product }) {
         </Link>
 
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
-          {/* Product Image Gallery Placeholder */}
+          {/* Product Image Gallery */}
           <div className="flex flex-col gap-4">
             <div className="relative aspect-square overflow-hidden rounded-3xl border border-border bg-card">
               <Image
-                src={imageUrl}
+                src={activeImageUrl}
                 alt={product.name}
                 fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                 className="object-contain p-8"
                 priority
               />
             </div>
-            {/* Gallery Thumbnails Placeholder */}
-            <div className="grid grid-cols-4 gap-4">
-              {[1, 2, 3, 4].map((i) => (
-                <div
-                  key={i}
-                  className="relative aspect-square cursor-pointer rounded-2xl border border-border bg-card opacity-50 transition-all hover:border-primary hover:opacity-100"
-                >
-                  <Image
-                    src={imageUrl}
-                    alt={product.name}
-                    fill
-                    className="object-contain p-2"
-                  />
-                </div>
-              ))}
-            </div>
+            
+            {/* Gallery Thumbnails */}
+            {galleryImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-4">
+                {galleryImages.map((img, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setActiveImage(i)}
+                    className={`relative aspect-square cursor-pointer rounded-2xl border transition-all ${
+                      activeImage === i 
+                        ? "border-primary ring-2 ring-primary/20 opacity-100 shadow-lg" 
+                        : "border-border opacity-50 hover:border-primary/50 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={getImageUrl(img)}
+                      alt={`${product.name} Gallery ${i + 1}`}
+                      fill
+                      sizes="120px"
+                      className="object-contain p-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Product Details */}

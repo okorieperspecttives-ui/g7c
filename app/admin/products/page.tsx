@@ -4,6 +4,7 @@ import Image from "next/image";
 import { getProducts } from "@/lib/supabase/products";
 import { formatNaira } from "@/lib/products";
 import { getPublicUrl } from "@/lib/supabase";
+import DeleteProductButton from "./DeleteProductButton";
 
 export default async function AdminProductsList() {
   let products = [];
@@ -80,7 +81,7 @@ export default async function AdminProductsList() {
               {products.map((product) => {
                 const imageUrl = (() => {
                   const rawImage = product.main_image || "";
-                  if (!rawImage) return "/assets/placeholder.jpg";
+                  if (!rawImage) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
                   if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
                   return getPublicUrl("product-images", rawImage);
                 })();
@@ -94,6 +95,7 @@ export default async function AdminProductsList() {
                             src={imageUrl}
                             alt={product.name}
                             fill
+                            sizes="56px"
                             className="object-contain"
                           />
                         </div>
@@ -131,7 +133,7 @@ export default async function AdminProductsList() {
                       </span>
                     </td>
                     <td className="px-8 py-5 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-0 transition-opacity group-hover:opacity-100">
+                      <div className="flex items-center justify-end gap-2 transition-all">
                         <Link 
                           href={`/products/${product.id}`}
                           target="_blank"
@@ -145,9 +147,7 @@ export default async function AdminProductsList() {
                         >
                           <Edit2 className="h-4 w-4" />
                         </Link>
-                        <button className="p-2 rounded-xl bg-destructive/10 text-destructive hover:bg-destructive hover:text-destructive-foreground transition-colors">
-                          <Trash2 className="h-4 w-4" />
-                        </button>
+                        <DeleteProductButton id={product.id} name={product.name} />
                       </div>
                     </td>
                   </tr>
@@ -162,7 +162,7 @@ export default async function AdminProductsList() {
           {products.map((product) => {
             const imageUrl = (() => {
               const rawImage = product.main_image || "";
-              if (!rawImage) return "/assets/placeholder.jpg";
+              if (!rawImage) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
               if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
               return getPublicUrl("product-images", rawImage);
             })();
@@ -175,6 +175,7 @@ export default async function AdminProductsList() {
                       src={imageUrl}
                       alt={product.name}
                       fill
+                      sizes="80px"
                       className="object-contain"
                     />
                   </div>
@@ -229,9 +230,7 @@ export default async function AdminProductsList() {
                     <Edit2 className="h-4 w-4" />
                     Edit
                   </Link>
-                  <button className="flex h-10 w-10 items-center justify-center rounded-xl bg-destructive/10 text-destructive transition-colors active:bg-destructive/20">
-                    <Trash2 className="h-4 w-4" />
-                  </button>
+                  <DeleteProductButton id={product.id} name={product.name} isMobile={true} />
                 </div>
               </div>
             );

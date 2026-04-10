@@ -13,6 +13,7 @@ import {
   Globe,
   Loader2,
   ArrowLeft,
+  LayoutDashboard,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -81,13 +82,25 @@ export default function ProfilePage() {
   return (
     <main className="min-h-screen bg-background pt-24 pb-20">
       <div className="mx-auto max-w-screen-md px-4 sm:px-6 lg:px-8">
-        <Link
-          href="/dashboard"
-          className="mb-8 inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </Link>
+        <div className="flex items-center justify-between mb-8">
+          <Link
+            href="/dashboard"
+            className="inline-flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-primary transition-colors"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back to Dashboard
+          </Link>
+
+          {profile?.role === "admin" && (
+            <Link
+              href="/admin"
+              className="inline-flex items-center gap-2 rounded-xl bg-primary/10 px-4 py-2 text-xs font-black uppercase tracking-widest text-primary hover:bg-primary hover:text-primary-foreground transition-all shadow-lg shadow-primary/5"
+            >
+              <LayoutDashboard className="h-4 w-4" />
+              Admin Panel
+            </Link>
+          )}
+        </div>
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

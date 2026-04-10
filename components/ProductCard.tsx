@@ -43,7 +43,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   // Get public URL if it's a storage path, otherwise use as is (for assets/ legacy support)
   const imageUrl = useMemo(() => {
     const rawImage = product.main_image || "";
-    if (!rawImage) return "/assets/placeholder.jpg";
+    if (!rawImage) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
     if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
     return getPublicUrl("product-images", rawImage);
   }, [product.main_image]);
@@ -64,6 +64,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
           src={imageUrl}
           alt={product.name}
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute top-4 left-4 rounded-full bg-primary/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground backdrop-blur-sm">

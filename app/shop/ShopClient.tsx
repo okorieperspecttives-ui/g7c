@@ -2,15 +2,20 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { PRODUCTS, CATEGORIES } from "@/lib/products";
+import { Product, Category, Brand, ProductDetail } from "@/lib/types";
 import ProductCard from "@/components/ProductCard";
 import { Search, SlidersHorizontal, ChevronDown, X, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 
 const CAPACITY_RANGES = ["< 1kVA", "1-3kVA", "3-5kVA", "5-10kVA", "> 10kVA"];
-const BRANDS = ["itel Energy", "Generic"]; // Future-proofed
 
-export default function ShopClient() {
+interface ShopClientProps {
+  initialProducts: ProductDetail[];
+  initialCategories: Category[];
+  initialBrands: Brand[];
+}
+
+export default function ShopClient({ initialProducts, initialCategories, initialBrands }: ShopClientProps) {
   const searchParams = useSearchParams();
   const router = useRouter();
 
@@ -25,7 +30,7 @@ export default function ShopClient() {
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
     searchParams.get("brand")?.split(",").filter(Boolean) || []
   );
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
   const [sortBy, setSortBy] = useState(searchParams.get("sort") || "Newest");
   const [isFilterMobileOpen, setIsFilterMobileOpen] = useState(false);
 
@@ -43,10 +48,15 @@ export default function ShopClient() {
   }, [searchQuery, selectedCategories, selectedCapacities, selectedBrands, sortBy, router]);
 
   const filteredProducts = useMemo(() => {
-    return PRODUCTS.filter((product) => {
-      const price = (product as any).markup_price || (product as any).price || 0;
-      const category = (product as any).category_name || (product as any).category || "";
-      const brand = (product as any).brand_name || (product as any).brand || "";
+    return initialProducts.filter((product) => {
+      const price = product.markup_price || 0;
+      const categoryId = product.category_id || "";
+      const brandId = product.brand_id || "";
+      
+      // Find category name for filtering if needed, or filter by ID
+      const category = initialCategories.find(c => c.id === categoryId)?.name || "";
+      const brand = initialBrands.find(b => b.id === brandId)?.name || "";
+      
       const capacity = (product as any).capacity || "";
 
       const matchesSearch = 
@@ -60,13 +70,13 @@ export default function ShopClient() {
 
       return matchesSearch && matchesCategory && matchesCapacity && matchesBrand && matchesPrice;
     }).sort((a, b) => {
-      const aPrice = (a as any).markup_price || (a as any).price || 0;
-      const bPrice = (b as any).markup_price || (b as any).price || 0;
+      const aPrice = a.markup_price || 0;
+      const bPrice = b.markup_price || 0;
       if (sortBy === "Price: Low to High") return aPrice - bPrice;
       if (sortBy === "Price: High to Low") return bPrice - aPrice;
       return 0;
     });
-  }, [searchQuery, selectedCategories, selectedCapacities, selectedBrands, priceRange, sortBy]);
+  }, [initialProducts, initialCategories, initialBrands, searchQuery, selectedCategories, selectedCapacities, selectedBrands, priceRange, sortBy]);
 
   const toggleItem = (list: string[], setFn: (val: string[]) => void, item: string) => {
     if (list.includes(item)) {
@@ -81,7 +91,7 @@ export default function ShopClient() {
     setSelectedCategories([]);
     setSelectedCapacities([]);
     setSelectedBrands([]);
-    setPriceRange([0, 2000000]);
+    setPriceRange([0, 10000000]);
     setSortBy("Newest");
   };
 
@@ -91,8 +101,8 @@ export default function ShopClient() {
       <section>
         <h3 className="mb-5 text-sm font-bold uppercase tracking-widest text-foreground">Categories</h3>
         <div className="flex flex-col gap-3">
-          {CATEGORIES.map(cat => (
-            <label key={cat.name} className="flex cursor-pointer items-center gap-3 group">
+          {initialCategories.map(cat => (
+            <label key={cat.id} className="flex cursor-pointer items-center gap-3 group">
               <div 
                 onClick={() => toggleItem(selectedCategories, setSelectedCategories, cat.name)}
                 className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${
@@ -129,7 +139,7 @@ export default function ShopClient() {
         </div>
       </section>
 
-      {/* Price Range Placeholder (Simple inputs for now) */}
+      {/* Price Range */}
       <section>
         <h3 className="mb-5 text-sm font-bold uppercase tracking-widest text-foreground">Price Range</h3>
         <div className="flex items-center gap-2">
@@ -155,18 +165,18 @@ export default function ShopClient() {
       <section>
         <h3 className="mb-5 text-sm font-bold uppercase tracking-widest text-foreground">Brands</h3>
         <div className="flex flex-col gap-3">
-          {BRANDS.map(brand => (
-            <label key={brand} className="flex cursor-pointer items-center gap-3 group">
+          {initialBrands.map(brand => (
+            <label key={brand.id} className="flex cursor-pointer items-center gap-3 group">
               <div 
-                onClick={() => toggleItem(selectedBrands, setSelectedBrands, brand)}
+                onClick={() => toggleItem(selectedBrands, setSelectedBrands, brand.name)}
                 className={`flex h-5 w-5 items-center justify-center rounded border transition-all ${
-                  selectedBrands.includes(brand) ? "bg-primary border-primary" : "border-border bg-card group-hover:border-primary"
+                  selectedBrands.includes(brand.name) ? "bg-primary border-primary" : "border-border bg-card group-hover:border-primary"
                 }`}
               >
-                {selectedBrands.includes(brand) && <Check className="h-3 w-3 text-primary-foreground" />}
+                {selectedBrands.includes(brand.name) && <Check className="h-3 w-3 text-primary-foreground" />}
               </div>
-              <span className={`text-sm font-medium transition-colors ${selectedBrands.includes(brand) ? "text-foreground" : "text-muted-foreground"}`}>
-                {brand}
+              <span className={`text-sm font-medium transition-colors ${selectedBrands.includes(brand.name) ? "text-foreground" : "text-muted-foreground"}`}>
+                {brand.name}
               </span>
             </label>
           ))}

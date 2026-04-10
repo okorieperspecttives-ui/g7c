@@ -432,9 +432,10 @@ export default function ProductForm({ brands, categories, initialData }: Product
               {previewUrl ? (
                 <div className="relative h-full w-full">
                   <Image
-                    src={previewUrl.startsWith("blob:") ? previewUrl : `/assets/placeholder.jpg`}
+                    src={previewUrl.startsWith("blob:") ? previewUrl : (previewUrl.startsWith("http") || previewUrl.startsWith("/") ? previewUrl : getPublicUrl("product-images", previewUrl))}
                     alt="Preview"
                     fill
+                    sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
                     className="object-contain p-4 sm:p-8"
                   />
                   <div className="absolute inset-0 bg-black/40 opacity-0 transition-opacity lg:group-hover:opacity-100 flex items-center justify-center">
@@ -476,6 +477,7 @@ export default function ProductForm({ brands, categories, initialData }: Product
                     src={path.startsWith('http') || path.startsWith('/') ? path : getPublicUrl('product-images', path)} 
                     alt={`Gallery ${i}`} 
                     fill 
+                    sizes="200px"
                     className="object-cover" 
                   />
                   <button
@@ -491,7 +493,7 @@ export default function ProductForm({ brands, categories, initialData }: Product
               {/* New Previews */}
               {galleryPreviewUrls.map((url, i) => (
                 <div key={`new-${i}`} className="relative aspect-square rounded-2xl border border-primary/30 bg-primary/5 overflow-hidden group">
-                  <Image src={url} alt={`New Gallery ${i}`} fill className="object-cover" />
+                  <Image src={url} alt={`New Gallery ${i}`} fill sizes="200px" className="object-cover" />
                   <button
                     type="button"
                     onClick={() => removeGalleryImage(i)}

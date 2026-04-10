@@ -1,4 +1,5 @@
 import { createServerClient } from '@supabase/ssr'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
 import { cookies } from 'next/headers'
 import { Database } from '../types/database.types'
 
@@ -49,7 +50,7 @@ export async function getUserProfile() {
   return {
     id: p.id,
     full_name: p.full_name,
-    email: authUser.email,
+    email: authUser.email ?? null,
     role: p.role,
     avatar_url: p.avatar_url,
     phone: p.phone,
