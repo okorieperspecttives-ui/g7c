@@ -19,21 +19,26 @@ function transformProduct(data: any): ProductDetail {
 }
 
 /**
- * Fetch all active products with brand and category information.
+ * Fetch all products with brand and category information.
+ * @param onlyActive If true, only returns active products (default: true)
  */
-export async function getProducts() {
+export async function getProducts(onlyActive = true) {
   const supabase = createClient();
   
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select(`
       *,
       brand:brands(*),
       category:categories(*),
       product_specs(*)
-    `)
-    .eq('is_active', true)
-    .order('created_at', { ascending: false });
+    `);
+
+  if (onlyActive) {
+    query = query.eq('is_active', true);
+  }
+
+  const { data, error } = await query.order('created_at', { ascending: false });
 
   if (error) {
     console.error('Error fetching products:', error);
@@ -44,12 +49,51 @@ export async function getProducts() {
 }
 
 /**
+ * Fetch all active brands.
+ */
+export async function getBrands() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('brands')
+    .select('*')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching brands:', error);
+    throw new Error('Failed to fetch brands');
+  }
+
+  return data;
+}
+
+/**
+ * Fetch all active categories.
+ */
+export async function getCategories() {
+  const supabase = createClient();
+  const { data, error } = await supabase
+    .from('categories')
+    .select('*')
+    .eq('is_active', true)
+    .order('name');
+
+  if (error) {
+    console.error('Error fetching categories:', error);
+    throw new Error('Failed to fetch categories');
+  }
+
+  return data;
+}
+
+
+/**
  * Fetch a single product by its ID with full details.
  */
-export async function getProductById(id: string) {
+export async function getProductById(id: string, onlyActive = false) {
   const supabase = createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select(`
       *,
@@ -57,9 +101,13 @@ export async function getProductById(id: string) {
       category:categories(*),
       product_specs(*)
     `)
-    .eq('id', id)
-    .eq('is_active', true)
-    .single();
+    .eq('id', id);
+
+  if (onlyActive) {
+    query = query.eq('is_active', true);
+  }
+
+  const { data, error } = await query.single();
 
   if (error) {
     if (error.code === 'PGRST116') return null; // Not found
@@ -73,10 +121,10 @@ export async function getProductById(id: string) {
 /**
  * Fetch a single product by its slug with full details.
  */
-export async function getProductBySlug(slug: string) {
+export async function getProductBySlug(slug: string, onlyActive = false) {
   const supabase = createClient();
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('products')
     .select(`
       *,
@@ -84,9 +132,13 @@ export async function getProductBySlug(slug: string) {
       category:categories(*),
       product_specs(*)
     `)
-    .eq('slug', slug)
-    .eq('is_active', true)
-    .single();
+    .eq('slug', slug);
+
+  if (onlyActive) {
+    query = query.eq('is_active', true);
+  }
+
+  const { data, error } = await query.single();
 
   if (error) {
     if (error.code === 'PGRST116') return null; // Not found

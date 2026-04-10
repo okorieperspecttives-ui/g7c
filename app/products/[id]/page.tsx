@@ -5,7 +5,7 @@ import { getProductById } from "@/lib/supabase/products";
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }): Promise<Metadata> {
   const { id } = await params;
-  const product = await getProductById(id);
+  const product = await getProductById(id, true);
   
   if (!product) return { title: "Product Not Found" };
 
@@ -22,7 +22,7 @@ export async function generateMetadata({ params }: { params: Promise<{ id: strin
 
 export default async function ProductPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const product = await getProductById(id);
+  const product = await getProductById(id, true);
 
   if (!product) {
     notFound();

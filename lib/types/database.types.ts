@@ -20,6 +20,7 @@ export interface Database {
           city: string | null
           state: string | null
           avatar_url: string | null
+          role: 'customer' | 'admin'
           created_at: string
           updated_at: string
         }
@@ -33,6 +34,7 @@ export interface Database {
           city?: string | null
           state?: string | null
           avatar_url?: string | null
+          role?: 'customer' | 'admin'
           created_at?: string
           updated_at?: string
         }
@@ -46,6 +48,7 @@ export interface Database {
           city?: string | null
           state?: string | null
           avatar_url?: string | null
+          role?: 'customer' | 'admin'
           created_at?: string
           updated_at?: string
         }
@@ -121,12 +124,15 @@ export interface Database {
           category_id: string | null
           name: string
           slug: string
+          short_description: string | null
           description: string | null
           base_price: number
           markup_price: number
           main_image: string | null
           gallery_images: Json
           features: Json
+          certifications: Json
+          warranty_months: number | null
           is_active: boolean
           stock_quantity: number
           created_at: string
@@ -138,12 +144,15 @@ export interface Database {
           category_id?: string | null
           name: string
           slug: string
+          short_description?: string | null
           description?: string | null
           base_price: number
           markup_price: number
           main_image?: string | null
           gallery_images?: Json
           features?: Json
+          certifications?: Json
+          warranty_months?: number | null
           is_active?: boolean
           stock_quantity?: number
           created_at?: string
@@ -155,12 +164,15 @@ export interface Database {
           category_id?: string | null
           name?: string
           slug?: string
+          short_description?: string | null
           description?: string | null
           base_price?: number
           markup_price?: number
           main_image?: string | null
           gallery_images?: Json
           features?: Json
+          certifications?: Json
+          warranty_months?: number | null
           is_active?: boolean
           stock_quantity?: number
           created_at?: string

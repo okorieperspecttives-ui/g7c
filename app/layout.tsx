@@ -3,6 +3,7 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import WhatsAppButton from "@/components/WhatsAppButton";
+import { Toaster } from "sonner";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -55,7 +56,8 @@ export default function RootLayout({
         <Navbar />
         {children}
         <WhatsAppButton />
-        </body>
+        <Toaster position="top-right" richColors />
+      </body>
     </html>
   );
 }
