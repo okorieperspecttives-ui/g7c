@@ -45,7 +45,7 @@ export default async function BrandsPage() {
             <tbody className="divide-y divide-border/50">
               {brandList.map((brand) => {
                 const imageUrl = brand.logo_url 
-                  ? (brand.logo_url.startsWith("http") ? brand.logo_url : getPublicUrl("product-images", brand.logo_url))
+                  ? (brand.logo_url.startsWith("http") ? brand.logo_url : getPublicUrl("brand-logos", brand.logo_url))
                   : "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
 
                 return (

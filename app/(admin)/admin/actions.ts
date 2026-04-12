@@ -2,6 +2,7 @@
 
 import { createClient, getUserProfile } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 // --- Categories ---
 
@@ -20,14 +21,18 @@ export async function createCategory(formData: FormData) {
   let image_url = null;
   if (imageFile && imageFile.size > 0) {
     const fileExt = imageFile.name.split(".").pop();
-    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `categories/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("product-images")
+      .from("category-images")
       .upload(filePath, imageFile);
 
-    if (!uploadError) image_url = filePath;
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return { error: `Upload failed: ${uploadError.message}` };
+    }
+    image_url = filePath;
   }
 
   const { error } = await (supabase.from("categories") as any).insert([{
@@ -36,7 +41,7 @@ export async function createCategory(formData: FormData) {
 
   if (error) return { error: error.message };
   revalidatePath("/admin/categories");
-  return { success: true };
+  redirect("/admin/categories");
 }
 
 export async function updateCategory(id: string, formData: FormData) {
@@ -55,21 +60,25 @@ export async function updateCategory(id: string, formData: FormData) {
 
   if (imageFile && imageFile.size > 0) {
     const fileExt = imageFile.name.split(".").pop();
-    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
     const filePath = `categories/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("product-images")
+      .from("category-images")
       .upload(filePath, imageFile);
 
-    if (!uploadError) updateData.image_url = filePath;
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return { error: `Upload failed: ${uploadError.message}` };
+    }
+    updateData.image_url = filePath;
   }
 
   const { error } = await (supabase.from("categories") as any).update(updateData).eq("id", id);
 
   if (error) return { error: error.message };
   revalidatePath("/admin/categories");
-  return { success: true };
+  redirect("/admin/categories");
 }
 
 export async function deleteCategory(id: string) {
@@ -99,14 +108,18 @@ export async function createBrand(formData: FormData) {
   let logo_url = null;
   if (logoFile && logoFile.size > 0) {
     const fileExt = logoFile.name.split(".").pop();
-    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `brands/${fileName}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `logos/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("product-images")
+      .from("brand-logos")
       .upload(filePath, logoFile);
 
-    if (!uploadError) logo_url = filePath;
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return { error: `Upload failed: ${uploadError.message}` };
+    }
+    logo_url = filePath;
   }
 
   const { error } = await (supabase.from("brands") as any).insert([{
@@ -115,7 +128,7 @@ export async function createBrand(formData: FormData) {
 
   if (error) return { error: error.message };
   revalidatePath("/admin/brands");
-  return { success: true };
+  redirect("/admin/brands");
 }
 
 export async function updateBrand(id: string, formData: FormData) {
@@ -132,21 +145,25 @@ export async function updateBrand(id: string, formData: FormData) {
 
   if (logoFile && logoFile.size > 0) {
     const fileExt = logoFile.name.split(".").pop();
-    const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-    const filePath = `brands/${fileName}`;
+    const fileName = `${Date.now()}-${Math.random().toString(36).substring(2)}.${fileExt}`;
+    const filePath = `logos/${fileName}`;
 
     const { error: uploadError } = await supabase.storage
-      .from("product-images")
+      .from("brand-logos")
       .upload(filePath, logoFile);
 
-    if (!uploadError) updateData.logo_url = filePath;
+    if (uploadError) {
+      console.error("Upload error:", uploadError);
+      return { error: `Upload failed: ${uploadError.message}` };
+    }
+    updateData.logo_url = filePath;
   }
 
   const { error } = await (supabase.from("brands") as any).update(updateData).eq("id", id);
 
   if (error) return { error: error.message };
   revalidatePath("/admin/brands");
-  return { success: true };
+  redirect("/admin/brands");
 }
 
 export async function deleteBrand(id: string) {

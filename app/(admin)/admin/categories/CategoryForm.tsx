@@ -59,7 +59,7 @@ export default function CategoryForm({ initialData }: CategoryFormProps) {
 
   const displayImageUrl = previewUrl?.startsWith("blob:") 
     ? previewUrl 
-    : (previewUrl ? (previewUrl.startsWith("http") ? previewUrl : getPublicUrl("product-images", previewUrl)) : null);
+    : (previewUrl ? (previewUrl.startsWith("http") ? previewUrl : getPublicUrl("category-images", previewUrl)) : null);
 
   return (
     <form action={handleSubmit} className="space-y-8 max-w-4xl mx-auto">

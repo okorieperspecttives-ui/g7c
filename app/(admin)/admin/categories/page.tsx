@@ -45,7 +45,7 @@ export default async function CategoriesPage() {
             <tbody className="divide-y divide-border/50">
               {categoryList.map((category) => {
                 const imageUrl = category.image_url 
-                  ? (category.image_url.startsWith("http") ? category.image_url : getPublicUrl("product-images", category.image_url))
+                  ? (category.image_url.startsWith("http") ? category.image_url : getPublicUrl("category-images", category.image_url))
                   : "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
 
                 return (

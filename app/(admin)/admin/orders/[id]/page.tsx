@@ -6,7 +6,8 @@ import StatusBadge from "../StatusBadge";
 import { formatNaira } from "@/lib/products";
 import OrderStatusUpdater from "./OrderStatusUpdater";
 
-export default async function OrderDetailsPage({ params }: { params: { id: string } }) {
+export default async function OrderDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
   const supabase = await createClient();
   const { data: orderData } = await supabase
     .from("orders")
@@ -28,7 +29,7 @@ export default async function OrderDetailsPage({ params }: { params: { id: strin
         )
       )
     `)
-    .eq("id", params.id)
+    .eq("id", id)
     .single();
 
   const order = orderData as any;
