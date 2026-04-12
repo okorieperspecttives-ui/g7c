@@ -15,6 +15,8 @@ const ICON_MAP: Record<string, LucideIcon> = {
 const CategorySection = async () => {
   const categories: Category[] = (await getCategories()) || [];
 
+  if (categories.length === 0) return null;
+
   return (
     <section className="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
       <div className="mb-12 text-center md:text-left">

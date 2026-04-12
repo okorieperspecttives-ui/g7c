@@ -13,7 +13,7 @@ import Link from "next/link";
 
 export default function Home() {
   return (
-    <main className="min-h-screen bg-[color:var(--background)]">
+    <main className="min-h-screen bg-background">
       {/* 1. Full-width Hero Section with auto-scrolling carousel */}
       <Hero />
 
@@ -26,20 +26,20 @@ export default function Home() {
 
 
       {/* 4. Main Product Grid / Shop Preview Section */}
-      <div className="bg-[color:var(--secondary)]/30">
+      <section id="products" className="bg-secondary/30">
         <div className="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
           <div className="mb-12 flex flex-col items-center justify-between gap-6 md:flex-row">
             <div className="text-center md:text-left">
-              <h2 className="text-3xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-4xl">
-                Explore Our Energy Solutions
+              <h2 className="text-3xl font-bold tracking-tight text-foreground sm:text-4xl">
+                Featured Products
               </h2>
-              <p className="mt-2 text-lg text-[color:var(--muted-foreground)]">
-                Curated premium products for every energy requirement.
+              <p className="mt-2 text-lg text-muted-foreground">
+                Discover our most popular energy-efficient solutions.
               </p>
             </div>
             <Link
               href="/shop"
-              className="flex items-center gap-2 rounded-full bg-[color:var(--primary)] px-8 py-3 text-sm font-bold text-[color:var(--primary-foreground)] transition-all hover:scale-105 active:scale-95 shadow-xl shadow-[color:var(--primary)]/20"
+              className="flex items-center gap-2 rounded-full bg-primary px-8 py-3 text-sm font-bold text-primary-foreground transition-all hover:scale-105 active:scale-95 shadow-xl shadow-primary/20"
             >
               View All Products
               <ArrowRight className="h-4 w-4" />
@@ -47,7 +47,7 @@ export default function Home() {
           </div>
           <ProductGrid />
         </div>
-      </div>
+      </section>
 
       {/* 5. Why Choose Us / Trust Section */}
       <TrustSection />
@@ -66,7 +66,7 @@ export default function Home() {
 
       {/* 8. Newsletter / Final CTA Section */}
       <section className="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
-        <div className="relative overflow-hidden rounded-[3rem] bg-[color:var(--primary)] px-8 py-20 text-center text-[color:var(--primary-foreground)] shadow-2xl shadow-[color:var(--primary)]/30">
+        <div className="relative overflow-hidden rounded-[3rem] bg-primary px-8 py-20 text-center text-primary-foreground shadow-2xl shadow-primary/30">
           <div className="relative z-10 mx-auto max-w-3xl">
             <h2 className="mb-6 text-4xl font-bold tracking-tight sm:text-5xl">
               Ready to Power Your Future?
@@ -76,14 +76,14 @@ export default function Home() {
             </p>
             <form className="flex flex-col items-center gap-4 sm:flex-row sm:justify-center">
               <div className="relative w-full sm:max-w-md">
-                <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-[color:var(--primary)]" />
+                <Mail className="absolute top-1/2 left-4 h-5 w-5 -translate-y-1/2 text-primary" />
                 <input
                   type="email"
                   placeholder="Enter your email address"
-                  className="w-full rounded-full bg-[color:var(--background)] py-4 pl-12 pr-6 text-sm font-bold text-[color:var(--foreground)] placeholder-[color:var(--muted-foreground)] focus:outline-none focus:ring-4 focus:ring-white/20"
+                  className="w-full rounded-full bg-background py-4 pl-12 pr-6 text-sm font-bold text-foreground placeholder-muted-foreground focus:outline-none focus:ring-4 focus:ring-white/20"
                 />
               </div>
-              <button className="w-full rounded-full bg-[color:var(--foreground)] px-10 py-4 text-sm font-black uppercase tracking-widest text-[color:var(--background)] transition-all hover:scale-105 active:scale-95 sm:w-auto">
+              <button className="w-full rounded-full bg-foreground px-10 py-4 text-sm font-black uppercase tracking-widest text-background transition-all hover:scale-105 active:scale-95 sm:w-auto">
                 Join Now
               </button>
             </form>

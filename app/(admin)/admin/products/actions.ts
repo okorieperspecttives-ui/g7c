@@ -1,7 +1,6 @@
 "use server";
 
 import { createClient, getUserProfile } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 
@@ -12,9 +11,7 @@ export async function createProduct(formData: FormData) {
     return { error: "Unauthorized. Admin access required." };
   }
 
-  // Use admin client to bypass RLS for administrative actions
-  const supabase = await createAdminClient();
-  const anonClient = await createClient(); // For storage upload which might need session context
+  const supabase = await createClient();
 
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
@@ -41,7 +38,7 @@ export async function createProduct(formData: FormData) {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `products/${fileName}`;
 
-    const { error: uploadError } = await anonClient.storage
+    const { error: uploadError } = await supabase.storage
       .from("product-images")
       .upload(filePath, featuredImageFile);
 
@@ -60,10 +57,10 @@ export async function createProduct(formData: FormData) {
   for (const file of galleryFiles) {
     if (file.size > 0) {
       const fileExt = file.name.split(".").pop();
-      const fileName = `${Math.random()}.${fileExt}`;
+      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
       const filePath = `products/gallery/${fileName}`;
 
-      const { error: uploadError } = await anonClient.storage
+      const { error: uploadError } = await supabase.storage
         .from("product-images")
         .upload(filePath, file);
 
@@ -73,10 +70,22 @@ export async function createProduct(formData: FormData) {
     }
   }
 
+  // Check if slug exists and append unique suffix if it does
+  let finalSlug = slug;
+  const { data: existingProduct } = await supabase
+    .from("products")
+    .select("id")
+    .eq("slug", slug)
+    .single();
+
+  if (existingProduct) {
+    finalSlug = `${slug}-${Math.random().toString(36).substring(2, 7)}`;
+  }
+
   const { data: product, error } = await (supabase.from("products") as any)
     .insert([{
       name,
-      slug,
+      slug: finalSlug,
       brand_id,
       category_id,
       short_description,
@@ -85,11 +94,11 @@ export async function createProduct(formData: FormData) {
       markup_price,
       stock_quantity,
       warranty_months,
-      main_image,
-      gallery_images,
       features,
       certifications,
       is_active,
+      main_image,
+      gallery_images,
     }])
     .select()
     .single();
@@ -129,9 +138,7 @@ export async function updateProduct(id: string, formData: FormData) {
     return { error: "Unauthorized. Admin access required." };
   }
 
-  // Use admin client to bypass RLS for administrative actions
-  const supabase = await createAdminClient();
-  const anonClient = await createClient(); // For storage upload which might need session context
+  const supabase = await createClient();
 
   const name = formData.get("name") as string;
   const slug = formData.get("slug") as string;
@@ -174,7 +181,7 @@ export async function updateProduct(id: string, formData: FormData) {
     const fileName = `${Math.random()}.${fileExt}`;
     const filePath = `products/${fileName}`;
 
-    const { error: uploadError } = await anonClient.storage
+    const { error: uploadError } = await supabase.storage
       .from("product-images")
       .upload(filePath, featuredImageFile);
 
@@ -193,7 +200,7 @@ export async function updateProduct(id: string, formData: FormData) {
         const fileName = `${Math.random()}.${fileExt}`;
         const filePath = `products/gallery/${fileName}`;
 
-        const { error: uploadError } = await anonClient.storage
+        const { error: uploadError } = await supabase.storage
           .from("product-images")
           .upload(filePath, file);
 
@@ -268,8 +275,7 @@ export async function deleteProduct(id: string) {
     return { error: "Unauthorized. Admin access required." };
   }
 
-  // Use admin client to bypass RLS for administrative actions
-  const supabase = await createAdminClient();
+  const supabase = await createClient();
 
   const { error } = await (supabase.from("products") as any)
     .delete()

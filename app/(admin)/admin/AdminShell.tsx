@@ -12,11 +12,15 @@ import {
   Bell, 
   LogOut, 
   Menu, 
-  X 
+  X,
+  User,
+  ChevronDown,
+  ExternalLink
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase";
 
 interface AdminShellProps {
   children: ReactNode;
@@ -29,7 +33,16 @@ interface AdminShellProps {
 
 export default function AdminShell({ children, profile }: AdminShellProps) {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+  const supabase = createClient();
+
+  const handleSignOut = async () => {
+    await supabase.auth.signOut();
+    router.push("/");
+    router.refresh();
+  };
 
   const menuItems = [
     { label: "Dashboard", icon: <LayoutDashboard className="h-5 w-5" />, href: "/admin" },
@@ -173,18 +186,87 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
               <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background"></span>
             </button>
             
-            <div className="flex items-center gap-3 pl-4 border-l border-border/50">
-              <div className="text-right hidden sm:block">
-                <p className="text-sm font-bold text-foreground truncate max-w-[120px]">
-                  {profile.full_name || "Admin User"}
-                </p>
-                <p className="text-[10px] font-black uppercase tracking-widest text-primary">
-                  {profile.role}
-                </p>
-              </div>
-              <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20">
-                {profile.full_name?.[0] || profile.email?.[0] || "A"}
-              </div>
+            <div className="relative">
+              <button 
+                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                className="flex items-center gap-3 pl-4 border-l border-border/50 group"
+              >
+                <div className="text-right hidden sm:block">
+                  <p className="text-sm font-bold text-foreground truncate max-w-[120px] group-hover:text-primary transition-colors">
+                    {profile.full_name || "Admin User"}
+                  </p>
+                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">
+                    {profile.role}
+                  </p>
+                </div>
+                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                  {profile.full_name?.[0] || profile.email?.[0] || "A"}
+                </div>
+                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isUserDropdownOpen ? "rotate-180" : ""}`} />
+              </button>
+
+              <AnimatePresence>
+                {isUserDropdownOpen && (
+                  <>
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      onClick={() => setIsUserDropdownOpen(false)}
+                      className="fixed inset-0 z-40 bg-transparent"
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                      transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                      className="absolute right-0 top-full mt-4 z-50 w-64 overflow-hidden rounded-[2rem] border border-border bg-card p-2 shadow-2xl"
+                    >
+                      <div className="p-4 border-b border-border/50">
+                        <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "Admin User"}</p>
+                        <p className="text-[10px] font-medium text-muted-foreground truncate">{profile.email}</p>
+                      </div>
+                      
+                      <div className="p-2 space-y-1">
+                        <Link
+                          href="/admin"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+                        >
+                          <LayoutDashboard className="h-4 w-4" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          href="/profile"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+                        >
+                          <User className="h-4 w-4" />
+                          Profile
+                        </Link>
+                        <Link
+                          href="/"
+                          onClick={() => setIsUserDropdownOpen(false)}
+                          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                        >
+                          <ExternalLink className="h-4 w-4" />
+                          View Website
+                        </Link>
+                      </div>
+                      
+                      <div className="p-2 border-t border-border/50">
+                        <button
+                          onClick={handleSignOut}
+                          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-destructive hover:bg-destructive/10 transition-all"
+                        >
+                          <LogOut className="h-4 w-4" />
+                          Sign Out
+                        </button>
+                      </div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </header>

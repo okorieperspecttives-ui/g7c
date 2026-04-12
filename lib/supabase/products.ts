@@ -199,7 +199,7 @@ export async function getProductsByCategory(categoryName: string) {
       category:categories(*),
       product_specs(*)
     `)
-    .eq('category_id', catData.id)
+    .eq('category_id', (catData as any).id)
     .eq('is_active', true);
 
   if (error) {
