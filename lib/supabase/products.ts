@@ -1,4 +1,4 @@
-import { createClient } from '../supabase';
+import { createClient } from './server';
 import { ProductDetail } from '../types';
 
 /**
@@ -23,7 +23,7 @@ function transformProduct(data: any): ProductDetail {
  * @param onlyActive If true, only returns active products (default: true)
  */
 export async function getProducts(onlyActive = true) {
-  const supabase = createClient();
+  const supabase = await createClient();
   
   let query = supabase
     .from('products')
@@ -52,7 +52,7 @@ export async function getProducts(onlyActive = true) {
  * Fetch all active brands.
  */
 export async function getBrands() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('brands')
     .select('*')
@@ -71,7 +71,7 @@ export async function getBrands() {
  * Fetch all active categories.
  */
 export async function getCategories() {
-  const supabase = createClient();
+  const supabase = await createClient();
   const { data, error } = await supabase
     .from('categories')
     .select('*')
@@ -91,7 +91,7 @@ export async function getCategories() {
  * Fetch a single product by its ID with full details.
  */
 export async function getProductById(id: string, onlyActive = false) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   let query = supabase
     .from('products')
@@ -122,7 +122,7 @@ export async function getProductById(id: string, onlyActive = false) {
  * Fetch a single product by its slug with full details.
  */
 export async function getProductBySlug(slug: string, onlyActive = false) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   let query = supabase
     .from('products')
@@ -154,7 +154,7 @@ export async function getProductBySlug(slug: string, onlyActive = false) {
  * Currently just fetching top 8 active products.
  */
 export async function getFeaturedProducts(limit = 8) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from('products')
@@ -180,7 +180,7 @@ export async function getFeaturedProducts(limit = 8) {
  * Fetch products by category name.
  */
 export async function getProductsByCategory(categoryName: string) {
-  const supabase = createClient();
+  const supabase = await createClient();
 
   // First get category ID
   const { data: catData } = await supabase

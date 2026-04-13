@@ -18,7 +18,7 @@ const HERO_IMAGES = [
   {
     url: "/assets/hero-3.png",
     title: "Power Anywhere",
-    subtitle: "Portable power banks and backup systems for life on the go.",
+    subtitle: "Portable power stations and backup systems for life on the go.",
   },
 ];
 
@@ -46,67 +46,80 @@ const Hero = () => {
   };
 
   return (
-    <section className="relative h-[80vh] w-full overflow-hidden bg-[color:var(--background)]">
+    <section className="relative h-[80vh] w-full overflow-hidden bg-background">
       {/* Slides */}
       {HERO_IMAGES.map((slide, index) => (
         <div
           key={slide.url}
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-            index === currentSlide ? "opacity-100" : "opacity-0"
+            index === currentSlide ? "opacity-100 z-10" : "opacity-0 z-0"
           }`}
         >
-          <Image
-            src={slide.url}
-            alt={slide.title}
-            fill
-            className="object-cover brightness-[0.4]"
-            priority={index === 0}
-            quality={95}
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 flex flex-col items-center justify-center px-4 text-center">
-            <h1 className="mb-4 max-w-4xl text-4xl font-bold tracking-tight text-[#ffffff] sm:text-6xl md:text-7xl">
-              {slide.title}
-            </h1>
-            <p className="mb-8 max-w-2xl text-lg text-[#ededed] sm:text-xl">
-              {slide.subtitle}
-            </p>
-            <button
-              onClick={scrollToShop}
-              className="group flex items-center gap-2 rounded-full bg-[color:var(--primary)] px-8 py-3 text-sm font-bold text-[color:var(--primary-foreground)] transition-all hover:scale-105 active:scale-95"
-            >
-              Scroll to Shop
-              <ChevronRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
-            </button>
+          {/* Proper Image Component */}
+          <div className="relative h-full w-full">
+            <Image
+              src={slide.url}
+              alt={slide.title}
+              fill
+              className="object-cover"
+              priority={index === 0}
+              quality={95}
+              sizes="100vw"
+            />
+            {/* Subtle dark overlay/gradient at the bottom for readability */}
+            <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent" />
+          </div>
+
+          {/* Content Positioned Bottom-Left */}
+          <div className="absolute bottom-0 left-0 w-full p-8 sm:p-12 md:p-16 lg:p-24 text-left">
+            <div className="max-w-4xl space-y-4 sm:space-y-6">
+              <h1 className="text-4xl font-black tracking-tight text-white sm:text-6xl md:text-7xl lg:text-8xl drop-shadow-lg">
+                {slide.title}
+              </h1>
+              <p className="max-w-2xl text-lg font-bold text-white/90 sm:text-xl md:text-2xl drop-shadow-md">
+                {slide.subtitle}
+              </p>
+              <div className="pt-4 sm:pt-6">
+                <button
+                  onClick={scrollToShop}
+                  className="group flex items-center gap-3 rounded-full bg-primary px-8 py-4 text-sm font-black uppercase tracking-widest text-primary-foreground shadow-xl shadow-primary/20 transition-all hover:scale-105 active:scale-95"
+                >
+                  Shop Now
+                  <ChevronRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       ))}
 
       {/* Navigation Arrows */}
-      <button
-        onClick={prevSlide}
-        className="absolute left-4 top-1/2 -translate-y-1/2 rounded-full bg-black/20 p-2 text-[#ffffff] backdrop-blur-sm transition-colors hover:bg-black/40"
-        aria-label="Previous slide"
-      >
-        <ChevronLeft className="h-6 w-6" />
-      </button>
-      <button
-        onClick={nextSlide}
-        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full bg-black/20 p-2 text-[#ffffff] backdrop-blur-sm transition-colors hover:bg-black/40"
-        aria-label="Next slide"
-      >
-        <ChevronRight className="h-6 w-6" />
-      </button>
+      <div className="absolute right-8 bottom-8 z-20 flex gap-4 sm:right-12 sm:bottom-12 md:right-16 md:bottom-16">
+        <button
+          onClick={prevSlide}
+          className="rounded-full border border-white/20 bg-black/20 p-3 text-white backdrop-blur-md transition-all hover:bg-black/40 hover:border-white/40 active:scale-95"
+          aria-label="Previous slide"
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <button
+          onClick={nextSlide}
+          className="rounded-full border border-white/20 bg-black/20 p-3 text-white backdrop-blur-md transition-all hover:bg-black/40 hover:border-white/40 active:scale-95"
+          aria-label="Next slide"
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
+      </div>
 
-      {/* Dots */}
-      <div className="absolute bottom-8 left-1/2 flex -translate-x-1/2 gap-3">
+      {/* Dots (Positioned near the arrows) */}
+      <div className="absolute bottom-24 right-8 z-20 flex flex-col gap-3 sm:right-12 sm:bottom-32 md:right-16 md:bottom-36">
         {HERO_IMAGES.map((_, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}
-            className={`h-2 w-2 rounded-full transition-all ${
-              index === currentSlide ? "w-8 bg-[color:var(--primary)]" : "bg-white/30"
-            }`}
+            className={`h-2 rounded-full transition-all ${
+              index === currentSlide ? "h-8 bg-primary" : "h-2 bg-white/30"
+            } w-2`}
             aria-label={`Go to slide ${index + 1}`}
           />
         ))}

@@ -162,118 +162,122 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
       {/* Main Content Area */}
       <div className="flex flex-1 flex-col lg:pl-72">
         {/* Topbar */}
-        <header className="sticky top-0 z-40 flex h-20 items-center justify-between border-b border-border bg-background/80 px-6 backdrop-blur-md lg:px-10">
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={() => setIsMobileMenuOpen(true)}
-              className="lg:hidden p-2 rounded-xl bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
-            >
-              <Menu className="h-6 w-6" />
-            </button>
-            <div className="relative hidden sm:block">
-              <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-              <input
-                type="text"
-                placeholder="Search anything..."
-                className="h-11 w-80 rounded-2xl border-none bg-secondary/50 pl-11 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-6">
-            <button className="relative p-2 rounded-xl bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-              <Bell className="h-5 w-5" />
-              <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background"></span>
-            </button>
-            
-            <div className="relative">
+        <header className="sticky top-0 z-40 border-b border-border bg-background/80 backdrop-blur-md">
+          <div className="mx-auto max-w-7xl w-full flex h-20 items-center justify-between px-4 sm:px-6 lg:px-10">
+            <div className="flex items-center gap-4">
               <button 
-                onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
-                className="flex items-center gap-3 pl-4 border-l border-border/50 group"
+                onClick={() => setIsMobileMenuOpen(true)}
+                className="lg:hidden p-2 rounded-xl bg-secondary text-foreground hover:bg-secondary/80 transition-colors"
               >
-                <div className="text-right hidden sm:block">
-                  <p className="text-sm font-bold text-foreground truncate max-w-[120px] group-hover:text-primary transition-colors">
-                    {profile.full_name || "Admin User"}
-                  </p>
-                  <p className="text-[10px] font-black uppercase tracking-widest text-primary">
-                    {profile.role}
-                  </p>
-                </div>
-                <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                  {profile.full_name?.[0] || profile.email?.[0] || "A"}
-                </div>
-                <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isUserDropdownOpen ? "rotate-180" : ""}`} />
+                <Menu className="h-6 w-6" />
               </button>
+              <div className="relative hidden sm:block">
+                <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <input
+                  type="text"
+                  placeholder="Search anything..."
+                  className="h-11 w-80 rounded-2xl border-none bg-secondary/50 pl-11 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                />
+              </div>
+            </div>
 
-              <AnimatePresence>
-                {isUserDropdownOpen && (
-                  <>
-                    <motion.div
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      exit={{ opacity: 0 }}
-                      onClick={() => setIsUserDropdownOpen(false)}
-                      className="fixed inset-0 z-40 bg-transparent"
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                      animate={{ opacity: 1, y: 0, scale: 1 }}
-                      exit={{ opacity: 0, y: 10, scale: 0.95 }}
-                      transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                      className="absolute right-0 top-full mt-4 z-50 w-64 overflow-hidden rounded-[2rem] border border-border bg-card p-2 shadow-2xl"
-                    >
-                      <div className="p-4 border-b border-border/50">
-                        <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "Admin User"}</p>
-                        <p className="text-[10px] font-medium text-muted-foreground truncate">{profile.email}</p>
-                      </div>
-                      
-                      <div className="p-2 space-y-1">
-                        <Link
-                          href="/admin"
-                          onClick={() => setIsUserDropdownOpen(false)}
-                          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
-                        >
-                          <LayoutDashboard className="h-4 w-4" />
-                          Dashboard
-                        </Link>
-                        <Link
-                          href="/profile"
-                          onClick={() => setIsUserDropdownOpen(false)}
-                          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
-                        >
-                          <User className="h-4 w-4" />
-                          Profile
-                        </Link>
-                        <Link
-                          href="/"
-                          onClick={() => setIsUserDropdownOpen(false)}
-                          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
-                        >
-                          <ExternalLink className="h-4 w-4" />
-                          View Website
-                        </Link>
-                      </div>
-                      
-                      <div className="p-2 border-t border-border/50">
-                        <button
-                          onClick={handleSignOut}
-                          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-destructive hover:bg-destructive/10 transition-all"
-                        >
-                          <LogOut className="h-4 w-4" />
-                          Sign Out
-                        </button>
-                      </div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
+            <div className="flex items-center gap-6">
+              <button className="relative p-2 rounded-xl bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                <Bell className="h-5 w-5" />
+                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background"></span>
+              </button>
+              
+              <div className="relative">
+                <button 
+                  onClick={() => setIsUserDropdownOpen(!isUserDropdownOpen)}
+                  className="flex items-center gap-3 pl-4 border-l border-border/50 group"
+                >
+                  <div className="text-right hidden sm:block">
+                    <p className="text-sm font-bold text-foreground truncate max-w-[120px] group-hover:text-primary transition-colors">
+                      {profile.full_name || "Admin User"}
+                    </p>
+                    <p className="text-[10px] font-black uppercase tracking-widest text-primary">
+                      {profile.role}
+                    </p>
+                  </div>
+                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-black border border-primary/20 group-hover:bg-primary group-hover:text-primary-foreground transition-all">
+                    {profile.full_name?.[0] || profile.email?.[0] || "A"}
+                  </div>
+                  <ChevronDown className={`h-4 w-4 text-muted-foreground transition-transform duration-300 ${isUserDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                <AnimatePresence>
+                  {isUserDropdownOpen && (
+                    <>
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        onClick={() => setIsUserDropdownOpen(false)}
+                        className="fixed inset-0 z-40 bg-transparent"
+                      />
+                      <motion.div
+                        initial={{ opacity: 0, y: 10, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, y: 10, scale: 0.95 }}
+                        transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                        className="absolute right-0 top-full mt-4 z-50 w-64 overflow-hidden rounded-[2rem] border border-border bg-card p-2 shadow-2xl"
+                      >
+                        <div className="p-4 border-b border-border/50">
+                          <p className="text-sm font-bold text-foreground truncate">{profile.full_name || "Admin User"}</p>
+                          <p className="text-[10px] font-medium text-muted-foreground truncate">{profile.email}</p>
+                        </div>
+                        
+                        <div className="p-2 space-y-1">
+                          <Link
+                            href="/admin"
+                            onClick={() => setIsUserDropdownOpen(false)}
+                            className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+                          >
+                            <LayoutDashboard className="h-4 w-4" />
+                            Dashboard
+                          </Link>
+                          <Link
+                            href="/profile"
+                            onClick={() => setIsUserDropdownOpen(false)}
+                            className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-primary/10 hover:text-primary transition-all"
+                          >
+                            <User className="h-4 w-4" />
+                            Profile
+                          </Link>
+                          <Link
+                            href="/"
+                            onClick={() => setIsUserDropdownOpen(false)}
+                            className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-muted-foreground hover:bg-secondary hover:text-foreground transition-all"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                            View Website
+                          </Link>
+                        </div>
+                        
+                        <div className="p-2 border-t border-border/50">
+                          <button
+                            onClick={handleSignOut}
+                            className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-sm font-bold text-destructive hover:bg-destructive/10 transition-all"
+                          >
+                            <LogOut className="h-4 w-4" />
+                            Sign Out
+                          </button>
+                        </div>
+                      </motion.div>
+                    </>
+                  )}
+                </AnimatePresence>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 p-6 lg:p-10">
-          {children}
+        <main className="flex-1 p-4 sm:p-6 lg:p-10 overflow-y-auto">
+          <div className="mx-auto max-w-7xl w-full">
+            {children}
+          </div>
         </main>
       </div>
     </div>

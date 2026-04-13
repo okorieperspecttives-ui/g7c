@@ -70,66 +70,72 @@ const Testimonials = () => {
   }, [slideNext]);
 
   return (
-    <section className="bg-[color:var(--secondary)]/30 py-24">
+    <section className="bg-secondary/30 py-24 overflow-hidden">
       <div className="mx-auto max-w-screen-2xl px-4 sm:px-6 lg:px-8">
         <div className="mb-20 text-center">
-          <h2 className="text-3xl font-bold tracking-tight text-[color:var(--foreground)] sm:text-4xl lg:text-5xl">
-            What Our Customers Say
+          <h2 className="text-3xl font-black tracking-tight text-foreground sm:text-4xl lg:text-5xl">
+            What Our <span className="text-primary italic">Customers</span> Say
           </h2>
-          <p className="mt-4 text-lg text-[color:var(--muted-foreground)] max-w-2xl mx-auto">
+          <p className="mt-4 text-lg text-muted-foreground max-w-2xl mx-auto font-medium">
             Join hundreds of satisfied customers across Nigeria who have achieved reliable power with Global 7CS.
           </p>
         </div>
 
         <div className="relative mx-auto max-w-4xl">
-          <AnimatePresence initial={false} custom={direction}>
-            <motion.div
-              key={currentIndex}
-              custom={direction}
-              initial={{ opacity: 0, x: direction > 0 ? 100 : -100 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: direction > 0 ? -100 : 100 }}
-              transition={{ type: "spring", damping: 30, stiffness: 300 }}
-              className="flex flex-col items-center text-center"
-            >
-              <div className="relative mb-12 h-24 w-24 overflow-hidden rounded-full border-4 border-[color:var(--primary)]/20 p-1">
-                <Image 
-                  src={TESTIMONIALS[currentIndex].avatar} 
-                  alt={TESTIMONIALS[currentIndex].name} 
-                  fill 
-                  className="rounded-full object-cover"
-                />
-              </div>
-              
-              <div className="mb-8 flex gap-1">
-                {Array.from({ length: TESTIMONIALS[currentIndex].rating }).map((_, i) => (
-                  <Star key={i} className="h-6 w-6 fill-[color:var(--primary)] text-[color:var(--primary)]" />
-                ))}
-              </div>
+          <div className="relative min-h-[450px] sm:min-h-[400px]">
+            <AnimatePresence initial={false} custom={direction} mode="wait">
+              <motion.div
+                key={currentIndex}
+                custom={direction}
+                initial={{ opacity: 0, x: direction > 0 ? 200 : -200 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction > 0 ? -200 : 200 }}
+                transition={{ 
+                  x: { type: "spring", stiffness: 300, damping: 30 },
+                  opacity: { duration: 0.3 }
+                }}
+                className="absolute inset-0 flex flex-col items-center text-center"
+              >
+                <div className="relative mb-10 h-24 w-24 overflow-hidden rounded-full border-4 border-primary/20 p-1 shadow-xl shadow-primary/10">
+                  <Image 
+                    src={TESTIMONIALS[currentIndex].avatar} 
+                    alt={TESTIMONIALS[currentIndex].name} 
+                    fill 
+                    className="rounded-full object-cover"
+                  />
+                </div>
+                
+                <div className="mb-8 flex gap-1.5">
+                  {Array.from({ length: TESTIMONIALS[currentIndex].rating }).map((_, i) => (
+                    <Star key={i} className="h-5 w-5 fill-primary text-primary" />
+                  ))}
+                </div>
 
-              <div className="relative mb-12">
-                <Quote className="absolute -top-8 -left-8 h-16 w-16 text-[color:var(--primary)]/10" />
-                <p className="relative z-10 text-2xl font-medium italic text-[color:var(--foreground)] leading-relaxed md:text-3xl">
-                  &quot;{TESTIMONIALS[currentIndex].quote}&quot;
-                </p>
-              </div>
+                <div className="relative mb-10 px-4">
+                  <Quote className="absolute -top-6 -left-2 h-12 w-12 text-primary/10 sm:-left-8 sm:h-16 sm:w-16" />
+                  <p className="relative z-10 text-xl font-bold italic text-foreground leading-relaxed sm:text-2xl md:text-3xl">
+                    &quot;{TESTIMONIALS[currentIndex].quote}&quot;
+                  </p>
+                </div>
 
-              <div>
-                <h4 className="text-xl font-bold text-[color:var(--foreground)]">
-                  {TESTIMONIALS[currentIndex].name}
-                </h4>
-                <p className="text-sm font-black uppercase tracking-[0.2em] text-[color:var(--primary)] mt-2">
-                  {TESTIMONIALS[currentIndex].location}, Nigeria
-                </p>
-              </div>
-            </motion.div>
-          </AnimatePresence>
+                <div className="mt-auto">
+                  <h4 className="text-xl font-black text-foreground">
+                    {TESTIMONIALS[currentIndex].name}
+                  </h4>
+                  <p className="text-xs font-black uppercase tracking-[0.2em] text-primary mt-2">
+                    {TESTIMONIALS[currentIndex].location}, Nigeria
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+          </div>
 
           {/* Navigation Controls */}
-          <div className="mt-16 flex items-center justify-center gap-6">
+          <div className="mt-12 flex items-center justify-center gap-6">
             <button 
               onClick={slidePrev}
-              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--card)] text-[color:var(--foreground)] transition-all hover:border-[color:var(--primary)] hover:text-[color:var(--primary)] active:scale-90"
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-foreground transition-all hover:scale-110 hover:border-primary hover:text-primary active:scale-90 shadow-sm"
+              aria-label="Previous testimonial"
             >
               <ChevronLeft className="h-6 w-6" />
             </button>
@@ -142,16 +148,18 @@ const Testimonials = () => {
                     setDirection(i > currentIndex ? 1 : -1);
                     setCurrentIndex(i);
                   }}
-                  className={`h-2.5 rounded-full transition-all duration-300 ${
-                    i === currentIndex ? "w-10 bg-[color:var(--primary)]" : "w-2.5 bg-[color:var(--border)]"
+                  className={`h-2.5 rounded-full transition-all duration-500 ${
+                    i === currentIndex ? "w-10 bg-primary shadow-lg shadow-primary/20" : "w-2.5 bg-border hover:bg-primary/30"
                   }`}
+                  aria-label={`Go to testimonial ${i + 1}`}
                 />
               ))}
             </div>
 
             <button 
               onClick={slideNext}
-              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-[color:var(--border)] bg-[color:var(--card)] text-[color:var(--foreground)] transition-all hover:border-[color:var(--primary)] hover:text-[color:var(--primary)] active:scale-90"
+              className="flex h-12 w-12 cursor-pointer items-center justify-center rounded-full border border-border bg-card text-foreground transition-all hover:scale-110 hover:border-primary hover:text-primary active:scale-90 shadow-sm"
+              aria-label="Next testimonial"
             >
               <ChevronRight className="h-6 w-6" />
             </button>

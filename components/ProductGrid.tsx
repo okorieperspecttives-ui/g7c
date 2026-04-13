@@ -1,30 +1,29 @@
-"use client";
-
-import { useEffect, useState } from "react";
 import ProductCard from "./ProductCard";
 import { getProducts } from "@/lib/supabase/products";
 import { ProductDetail } from "@/lib/types";
-import { Loader2 } from "lucide-react";
 
-const ProductGrid = () => {
-  const [products, setProducts] = useState<ProductDetail[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+const ProductGrid = async () => {
+  let products: ProductDetail[] = [];
+  
+  try {
+    products = await getProducts();
+  } catch (err) {
+    console.error("Failed to fetch products:", err);
+    return (
+      <div className="text-center py-20">
+        <p className="text-destructive font-bold text-lg">Could not load marketplace products.</p>
+        <p className="text-muted-foreground mt-2">Please refresh the page to try again.</p>
+      </div>
+    );
+  }
 
-  useEffect(() => {
-    async function fetchProducts() {
-      try {
-        const data = await getProducts();
-        setProducts(data);
-      } catch (err) {
-        console.error("Failed to fetch products:", err);
-        setError("Could not load marketplace products.");
-      } finally {
-        setIsLoading(false);
-      }
-    }
-    fetchProducts();
-  }, []);
+  if (products.length === 0) {
+    return (
+      <div className="text-center py-20">
+        <p className="text-muted-foreground font-medium text-lg">No products available in the marketplace yet.</p>
+      </div>
+    );
+  }
 
   return (
     <section id="shop-section" className="mx-auto w-full max-w-screen-2xl bg-[color:var(--background)] px-4 py-20 sm:px-6 lg:px-8">
@@ -38,36 +37,18 @@ const ProductGrid = () => {
           </p>
         </div>
         
-        {/* Simple Filters Placeholder */}
         <div className="flex gap-4">
-          <button className="cursor-pointer rounded-full border border-[color:var(--primary)] bg-[color:var(--primary)]/10 px-6 py-2 text-sm font-bold text-[color:var(--primary)] transition-all hover:bg-[color:var(--primary)]/20">
+          <div className="rounded-full border border-[color:var(--primary)] bg-[color:var(--primary)]/10 px-6 py-2 text-sm font-bold text-[color:var(--primary)]">
             All Products
-          </button>
+          </div>
         </div>
       </div>
 
-      {isLoading ? (
-        <div className="flex flex-col items-center justify-center py-20">
-          <Loader2 className="h-10 w-10 animate-spin text-primary" />
-          <p className="mt-4 text-muted-foreground font-medium">Fetching energy solutions...</p>
-        </div>
-      ) : error ? (
-        <div className="text-center py-20">
-          <p className="text-destructive font-bold">{error}</p>
-          <button 
-            onClick={() => window.location.reload()}
-            className="mt-4 text-sm font-bold text-primary underline"
-          >
-            Try Again
-          </button>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {products.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
-      )}
+      <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        {products.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
     </section>
   );
 };
