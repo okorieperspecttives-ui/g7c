@@ -34,7 +34,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     router.push("/checkout");
   };
 
-  const handleInstallmentClick = (e: React.MouseEvent) => {
+  const handleLayawayClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsInstallmentOpen(true);
@@ -106,11 +106,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
               Buy Now
             </button>
             <button
-              onClick={handleInstallmentClick}
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-xs font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
+              onClick={handleLayawayClick}
+              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-[10px] font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
             >
-              <CreditCard className="h-3.5 w-3.5" />
-              Installment
+              <CreditCard className="h-3 w-3" />
+              Reserve & Pay Small Small
             </button>
           </div>
           <button

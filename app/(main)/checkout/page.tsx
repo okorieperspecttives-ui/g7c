@@ -4,7 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
-import { 
+import {
   ChevronLeft, 
   ArrowRight, 
   CreditCard, 
@@ -16,29 +16,41 @@ import {
   Phone,
   MessageCircle,
   MapPin,
-  Mail
+  Mail,
+  Wallet,
+  Timer
 } from "lucide-react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import InstallmentModal from "@/components/InstallmentModal";
 
 export default function CheckoutPage() {
   const { items, getSubtotal, clearCart } = useCartStore();
   const [isOrdered, setIsOrdered] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState("transfer");
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [orderId] = useState(() => `G7C-${Math.floor(100000 + Math.random() * 900000)}`);
   
   const subtotal = getSubtotal();
   const deliveryFee = 5000;
   const total = subtotal + deliveryFee;
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    
+
+    if (paymentMethod === "layaway" || paymentMethod === "transfer") {
+      setIsPaymentModalOpen(true);
+      setIsLoading(false);
+      return;
+    }
+
     // Simulate API call
     setTimeout(() => {
       setIsLoading(false);
       setIsOrdered(true);
       clearCart();
+      window.scrollTo(0, 0);
     }, 2000);
   };
 
@@ -163,18 +175,34 @@ export default function CheckoutPage() {
                 <h2 className="text-2xl font-bold text-foreground">Payment Method</h2>
               </div>
               
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                {[
-                  { id: "cod", label: "Cash on Delivery", sub: "Pay when received" },
-                  { id: "transfer", label: "Bank Transfer", sub: "Instant confirmation" },
-                  { id: "installment", label: "Installment Plan", sub: "Coming Soon", disabled: true },
-                ].map((method) => (
-                  <label key={method.id} className={`flex flex-col gap-1 p-6 rounded-2xl border-2 transition-all cursor-pointer ${method.disabled ? "opacity-50 grayscale cursor-not-allowed border-border" : "border-border hover:border-primary peer-checked:border-primary"}`}>
-                    <input disabled={method.disabled} required type="radio" name="payment" value={method.id} className="sr-only peer" />
-                    <span className="font-bold text-foreground">{method.label}</span>
-                    <span className="text-xs text-muted-foreground">{method.sub}</span>
-                  </label>
-                ))}
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <label className={`relative flex cursor-pointer flex-col gap-3 rounded-2xl border-2 p-5 transition-all ${paymentMethod === 'transfer' ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50'}`}>
+                  <input type="radio" name="payment" value="transfer" className="sr-only" checked={paymentMethod === 'transfer'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Wallet className="h-5 w-5" />
+                    </div>
+                    {paymentMethod === 'transfer' && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Direct Bank Transfer</p>
+                    <p className="text-[11px] font-medium text-muted-foreground">Pay via bank app or USSD</p>
+                  </div>
+                </label>
+
+                <label className={`relative flex cursor-pointer flex-col gap-3 rounded-2xl border-2 p-5 transition-all ${paymentMethod === 'layaway' ? 'border-primary bg-primary/5' : 'border-border bg-card hover:border-primary/50'}`}>
+                  <input type="radio" name="payment" value="layaway" className="sr-only" checked={paymentMethod === 'layaway'} onChange={(e) => setPaymentMethod(e.target.value)} />
+                  <div className="flex items-center justify-between">
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                      <Timer className="h-5 w-5" />
+                    </div>
+                    {paymentMethod === 'layaway' && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-foreground">Reserve & Pay Small Small</p>
+                    <p className="text-[11px] font-medium text-muted-foreground">40% deposit, 90 days to pay</p>
+                  </div>
+                </label>
               </div>
             </section>
           </div>
@@ -217,7 +245,7 @@ export default function CheckoutPage() {
                     <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      Place Order
+                      {paymentMethod === 'layaway' ? 'Reserve & Pay Small Small' : 'Place Order'}
                       <ArrowRight className="h-5 w-5" />
                     </>
                   )}
@@ -232,6 +260,13 @@ export default function CheckoutPage() {
           </div>
         </form>
       </div>
+      <InstallmentModal
+        isOpen={isPaymentModalOpen}
+        onClose={() => setIsPaymentModalOpen(false)}
+        productPrice={total}
+        productName="your order"
+        isDirectPayment={paymentMethod === 'transfer'}
+      />
     </main>
   );
 }

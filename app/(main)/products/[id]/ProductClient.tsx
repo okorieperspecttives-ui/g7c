@@ -249,7 +249,7 @@ export default function ProductClient({ product }: { product: Product }) {
                 className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl border-2 border-border bg-card py-5 text-base font-bold text-foreground transition-all hover:bg-secondary active:scale-95"
               >
                 <CreditCard className="h-5 w-5" />
-                Installment
+                Reserve & Pay Small Small
               </button>
             </div>
 
