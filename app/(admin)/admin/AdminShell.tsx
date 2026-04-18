@@ -15,7 +15,9 @@ import {
   X,
   User,
   ChevronDown,
-  ExternalLink
+  ExternalLink,
+  CreditCard,
+  RotateCcw
 } from "lucide-react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
@@ -50,6 +52,8 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
     { label: "Categories", icon: <Tags className="h-5 w-5" />, href: "/admin/categories" },
     { label: "Brands", icon: <Bookmark className="h-5 w-5" />, href: "/admin/brands" },
     { label: "Orders", icon: <ShoppingCart className="h-5 w-5" />, href: "/admin/orders" },
+    { label: "Reservations", icon: <CreditCard className="h-5 w-5" />, href: "/admin/reservations" },
+    { label: "Refunds", icon: <RotateCcw className="h-5 w-5" />, href: "/admin/refunds" },
     { label: "Users", icon: <Users className="h-5 w-5" />, href: "/admin/users" },
   ];
 

@@ -192,6 +192,71 @@ export async function updateUserRole(userId: string, role: "customer" | "admin")
   return { success: true };
 }
 
+// --- Reservations ---
+
+export async function updateReservationStatus(id: string, status: string) {
+  const profile = await getUserProfile();
+  if (!profile || profile.role !== "admin") return { error: "Unauthorized" };
+
+  const supabase = await createClient();
+  const { error } = await (supabase.from("layaway_reservations") as any)
+    .update({ status, updated_at: new Date().toISOString() })
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin/reservations");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function deleteReservation(id: string) {
+  const profile = await getUserProfile();
+  if (!profile || profile.role !== "admin") return { error: "Unauthorized" };
+
+  const supabase = await createClient();
+  const { error } = await (supabase.from("layaway_reservations") as any).delete().eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin/reservations");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+// --- Refunds ---
+
+export async function updateRefundStatus(id: string, status: string) {
+  const profile = await getUserProfile();
+  if (!profile || profile.role !== "admin") return { error: "Unauthorized" };
+
+  const supabase = await createClient();
+  const updateData: any = { status };
+  if (status === 'processed') {
+    updateData.processed_at = new Date().toISOString();
+  }
+
+  const { error } = await (supabase.from("refunds") as any)
+    .update(updateData)
+    .eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin/refunds");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
+export async function deleteRefund(id: string) {
+  const profile = await getUserProfile();
+  if (!profile || profile.role !== "admin") return { error: "Unauthorized" };
+
+  const supabase = await createClient();
+  const { error } = await (supabase.from("refunds") as any).delete().eq("id", id);
+
+  if (error) return { error: error.message };
+  revalidatePath("/admin/refunds");
+  revalidatePath("/dashboard");
+  return { success: true };
+}
+
 // --- Orders ---
 
 export async function updateOrderStatus(orderId: string, status: string) {
