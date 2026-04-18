@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { createClient } from "@/lib/supabase";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
-import { Zap, ShoppingBag, Heart, User, ArrowRight, Loader2 } from "lucide-react";
+import { Zap, ShoppingBag, Heart, User, ArrowRight, Loader2, CreditCard } from "lucide-react";
 import Link from "next/link";
+import LayawayReservations from "@/components/dashboard/LayawayReservations";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -33,6 +34,7 @@ export default function DashboardPage() {
         .single();
       
       setProfile(profileData);
+
       setIsLoading(false);
     };
 
@@ -54,8 +56,8 @@ export default function DashboardPage() {
   ];
 
   return (
-    <main className="min-h-screen bg-background pt-24 pb-20">
-      <div className="mx-auto max-w-screen-xl px-4 sm:px-6 lg:px-8">
+    <main className="min-h-screen bg-background pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+      <div className="mx-auto max-w-screen-2xl">
         <header className="mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -71,7 +73,7 @@ export default function DashboardPage() {
         </header>
 
         {/* Quick Stats */}
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-12">
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-3 mb-16">
           {stats.map((stat, i) => (
             <motion.div
               key={stat.label}
@@ -87,6 +89,11 @@ export default function DashboardPage() {
               <p className="text-3xl font-black text-foreground">{stat.value}</p>
             </motion.div>
           ))}
+        </div>
+
+        {/* Layaway Section */}
+        <div className="mb-16">
+          <LayawayReservations />
         </div>
 
         {/* Activity Section */}

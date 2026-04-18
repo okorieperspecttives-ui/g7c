@@ -238,7 +238,7 @@ export default function CheckoutPage() {
                     )}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-foreground">Reserve & Pay Small Small</p>
+                    <p className="text-sm font-bold text-foreground">Pay Small Small</p>
                     <p className="text-[11px] font-medium text-muted-foreground">40% deposit, 90 days to pay</p>
                   </div>
                 </label>
@@ -284,7 +284,7 @@ export default function CheckoutPage() {
                     <div className="h-5 w-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
                   ) : (
                     <>
-                      {paymentMethod === 'layaway' ? 'Reserve & Pay Small Small' : 'Place Order'}
+                      {paymentMethod === 'layaway' ? 'Pay Small Small' : 'Place Order'}
                       <ArrowRight className="h-5 w-5" />
                     </>
                   )}
@@ -306,7 +306,7 @@ export default function CheckoutPage() {
         productName="your entire cart"
         isDirectPayment={paymentMethod === 'transfer'}
         onSuccess={handleInstallmentSuccess}
-        items={items.map(item => ({ name: item.name, quantity: item.quantity }))}
+        items={items.map(item => ({ id: item.id, name: item.name, quantity: item.quantity }))}
       />
     </main>
   );

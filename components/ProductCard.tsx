@@ -110,7 +110,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
               className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-[10px] font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
             >
               <CreditCard className="h-3 w-3" />
-              Reserve & Pay Small Small
+              Pay Small Small
             </button>
           </div>
           <button
@@ -128,6 +128,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         onClose={() => setIsInstallmentOpen(false)}
         productPrice={price}
         productName={product.name}
+        productId={product.id}
         onSuccess={() => router.push("/dashboard")}
       />
     </div>

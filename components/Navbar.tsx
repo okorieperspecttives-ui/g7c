@@ -10,6 +10,7 @@ import {
   UserRound,
   ChevronDown,
   X,
+  Zap,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import MobileMenu from "./MobileMenu";

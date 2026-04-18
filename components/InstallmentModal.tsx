@@ -2,18 +2,20 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, CreditCard, CheckCircle2, ShieldCheck, Wallet, Info, AlertTriangle, Timer, Zap, Copy, Check, MessageCircle } from "lucide-react";
+import { X, CreditCard, CheckCircle2, ShieldCheck, Wallet, Info, AlertTriangle, Timer, Zap, Copy, Check, MessageCircle, Loader2 } from "lucide-react";
 import { formatNaira } from "@/lib/products";
 import { toast } from "sonner";
+import { createPaySmallSmallReservation } from "@/lib/actions/layaway";
 
 interface InstallmentModalProps {
   isOpen: boolean;
   onClose: () => void;
   productPrice: number;
   productName: string;
+  productId?: string;
   isDirectPayment?: boolean;
   onSuccess?: () => void;
-  items?: { name: string; quantity: number }[];
+  items?: { name: string; quantity: number; id?: string }[];
 }
 
 const InstallmentModal = ({ 
@@ -21,12 +23,15 @@ const InstallmentModal = ({
   onClose, 
   productPrice, 
   productName, 
+  productId,
   isDirectPayment = false,
   onSuccess,
   items
 }: InstallmentModalProps) => {
   const [showAccountDetails, setShowAccountDetails] = useState(isDirectPayment);
   const [copied, setCopied] = useState(false);
+  const [numPayments, setNumPayments] = useState(2);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const depositAmount = isDirectPayment ? productPrice : productPrice * 0.4;
   const balanceAmount = productPrice - depositAmount;
@@ -49,6 +54,49 @@ const InstallmentModal = ({
     onClose();
   };
 
+  const handleConfirmPayment = async () => {
+    if (isDirectPayment) {
+      if (onSuccess) onSuccess();
+      onClose();
+      return;
+    }
+
+    if (!productId && (!items || items.length === 0)) {
+      toast.error("Invalid reservation data.");
+      return;
+    }
+
+    setIsSubmitting(true);
+    try {
+      // If we have items (cart checkout), we'd need a way to handle multiple products.
+      // For now, let's assume we're reserving a single product or the first item if multiple.
+      const targetProductId = productId || (items && items[0]?.id);
+      
+      if (!targetProductId) {
+        toast.error("Product ID missing for reservation.");
+        return;
+      }
+
+      const { success, error } = await createPaySmallSmallReservation(
+        targetProductId,
+        productPrice,
+        depositAmount
+      );
+
+      if (success) {
+        toast.success("Reservation created successfully!");
+        if (onSuccess) onSuccess();
+        onClose();
+      } else {
+        toast.error(error || "Failed to create reservation.");
+      }
+    } catch (err) {
+      toast.error("An error occurred. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -68,7 +116,11 @@ const InstallmentModal = ({
           >
             <div className="flex items-center justify-between mb-8">
               <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-                {showAccountDetails ? <CheckCircle2 className="h-6 w-6" /> : <Wallet className="h-6 w-6" />}
+                {showAccountDetails ? (
+                  isSubmitting ? <Loader2 className="h-6 w-6 animate-spin" /> : <CheckCircle2 className="h-6 w-6" />
+                ) : (
+                  <Wallet className="h-6 w-6" />
+                )}
               </div>
               <button onClick={handleClose} className="rounded-full bg-secondary p-2 text-muted-foreground hover:text-foreground transition-colors">
                 <X className="h-5 w-5" />
@@ -83,10 +135,29 @@ const InstallmentModal = ({
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 20 }}
                 >
-                  <h2 className="text-3xl font-black tracking-tight text-foreground mb-2">Reserve & Pay Small Small</h2>
+                  <h2 className="text-3xl font-black tracking-tight text-foreground mb-2">Pay Small Small</h2>
                   <p className="text-muted-foreground mb-8 font-medium">
                     Secure your <span className="text-foreground font-bold">{productName}</span> today with a 40% deposit and pay the balance gradually.
                   </p>
+
+                  <div className="mb-8 space-y-4">
+                    <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Number of Payments</p>
+                    <div className="grid grid-cols-3 gap-3">
+                      {[2, 3, 4].map((n) => (
+                        <button
+                          key={n}
+                          onClick={() => setNumPayments(n)}
+                          className={`rounded-2xl py-3 text-sm font-bold transition-all ${
+                            numPayments === n 
+                            ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                            : "bg-secondary text-muted-foreground hover:bg-border"
+                          }`}
+                        >
+                          {n} Payments
+                        </button>
+                      ))}
+                    </div>
+                  </div>
 
                   {items && items.length > 0 && (
                     <div className="mb-8 p-4 rounded-2xl bg-secondary/30 border border-border">
@@ -109,8 +180,8 @@ const InstallmentModal = ({
                           <p className="text-3xl font-black text-primary">{formatNaira(depositAmount)}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Balance</p>
-                          <p className="text-lg font-bold text-foreground">{formatNaira(balanceAmount)}</p>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-1">Each Next Payment ({numPayments - 1}x)</p>
+                          <p className="text-lg font-bold text-foreground">{formatNaira(balanceAmount / (numPayments - 1))}</p>
                         </div>
                       </div>
                       <div className="h-2 w-full bg-primary/10 rounded-full overflow-hidden">
@@ -145,7 +216,7 @@ const InstallmentModal = ({
                     </div>
                     <div className="flex items-center gap-3 px-2 text-xs font-bold text-muted-foreground">
                       <ShieldCheck className="h-4 w-4 text-emerald-500" />
-                      <span>Your reservation is secured and confirmed instantly.</span>
+                      <span>Pay 40% now to reserve. Complete the balance within 90 days. No interest charged.</span>
                     </div>
                   </div>
 
@@ -227,13 +298,11 @@ const InstallmentModal = ({
                     </button>
                     {onSuccess && (
                       <button 
-                        onClick={() => {
-                          onSuccess();
-                          onClose();
-                        }}
-                        className="w-full rounded-2xl border-2 border-primary bg-primary/5 py-5 text-base font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/10 active:scale-95"
+                        disabled={isSubmitting}
+                        onClick={handleConfirmPayment}
+                        className="w-full rounded-2xl border-2 border-primary bg-primary/5 py-5 text-base font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/10 active:scale-95 disabled:opacity-50"
                       >
-                        I've Made the Transfer
+                        {isSubmitting ? "Processing..." : "I've Made the Transfer"}
                       </button>
                     )}
                     {!isDirectPayment && (

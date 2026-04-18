@@ -252,7 +252,7 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
                 className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl border-2 border-border bg-card py-5 text-base font-bold text-foreground transition-all hover:bg-secondary active:scale-95"
               >
                 <CreditCard className="h-5 w-5" />
-                Reserve & Pay Small Small
+                Pay Small Small
               </button>
             </div>
 
@@ -368,6 +368,7 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
         onClose={() => setIsInstallmentOpen(false)}
         productPrice={product.markup_price}
         productName={product.name}
+        productId={product.id}
         onSuccess={handleInstallmentSuccess}
       />
     </main>
