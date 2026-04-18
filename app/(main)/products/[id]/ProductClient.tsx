@@ -24,8 +24,8 @@ import { useCartStore } from "@/lib/store/useCartStore";
 import InstallmentModal from "@/components/InstallmentModal";
 
 export default function ProductClient({ product }: { product: ProductDetail }) {
-  const price = product.markup_price || 0;
-  const originalPrice = product.base_price || price;
+  // const price = product.markup_price || 0;
+  // const originalPrice = product.base_price || price;
   
   // Gallery Logic
   const galleryImages = useMemo(() => {
@@ -38,8 +38,8 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
     
     // Add gallery images from DB
     if (product.gallery_images && Array.isArray(product.gallery_images)) {
-      product.gallery_images.forEach((img: string | null) => {
-        if (typeof img === 'string' && img.trim() !== '') {
+      (product.gallery_images as any[]).forEach((img: any) => {
+        if (typeof img === "string" && img.trim() !== "") {
           images.push(img);
         }
       });
@@ -60,8 +60,8 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
     return getImageUrl(galleryImages[activeImage] || product.main_image || "");
   }, [galleryImages, activeImage, product.main_image]);
 
-  const category = product.category_name || product.category?.name || "Energy";
-  const brand = product.brand_name || product.brand?.name || "Global 7CS";
+  // const category = product.category_name || product.category?.name || "Energy";
+  // const brand = product.brand_name || product.brand?.name || "Global 7CS";
   const features = (product.features as string[]) || [];
   const specifications = product.specifications || [];
 
@@ -301,7 +301,7 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
               </tbody>
             </table>
           </div>
-        )}
+        </div>
 
         {/* Features Grid */}
         <div className="mt-20">
@@ -323,10 +323,11 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
                     <Battery className="h-6 w-6" />
                   )}
                 </div>
-              ))}
-            </div>
+                <p className="text-sm font-bold text-foreground">{feature}</p>
+              </div>
+            ))}
           </div>
-        )}
+        </div>
 
         {/* Related Products */}
         {relatedProducts.length > 0 && (

@@ -109,8 +109,8 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
                             </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                     
                     <button 
                       onClick={() => setShowClearConfirm(true)}
