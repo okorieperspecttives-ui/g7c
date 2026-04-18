@@ -206,8 +206,107 @@ export async function processExpiredReservations() {
   }
 
   return { 
-    success: true, 
-    processedCount: expired.length, 
-    results 
-  };
+     success: true, 
+     processedCount: expired.length, 
+     results 
+   };
+ }
+
+/**
+ * Cancels a reservation and creates a refund record.
+ */
+export async function cancelPaySmallSmallReservation(reservationId: string) {
+  const profile = await getUserProfile();
+  if (!profile) {
+    return { error: "You must be signed in to cancel a reservation." };
+  }
+
+  const supabase = await createClient();
+
+  // 1. Fetch current reservation
+  const { data: reservation, error: fetchError } = await (supabase.from("layaway_reservations") as any)
+    .select("*")
+    .eq("id", reservationId)
+    .eq("user_id", profile.id)
+    .single();
+
+  if (fetchError || !reservation) {
+    return { error: "Reservation not found." };
+  }
+
+  if (reservation.status !== "active") {
+    return { error: `Cannot cancel a reservation that is already ${reservation.status}.` };
+  }
+
+  const paidAmount = Number(reservation.paid_amount);
+  const restockingFee = paidAmount * 0.1;
+  const refundAmount = paidAmount - restockingFee;
+
+  // 2. Create refund record
+  const { error: refundError } = await (supabase.from("refunds") as any).insert([
+    {
+      layaway_reservation_id: reservation.id,
+      user_id: profile.id,
+      product_id: reservation.product_id,
+      paid_amount: paidAmount,
+      refund_amount: refundAmount,
+      restocking_fee: restockingFee,
+      refund_reason: "Customer cancelled reservation",
+      status: "pending",
+    },
+  ]);
+
+  if (refundError) {
+    console.error("Error creating refund record:", refundError);
+    return { error: "Failed to create refund record. Please contact support." };
+  }
+
+  // 3. Update reservation status to cancelled
+  const { error: updateError } = await (supabase.from("layaway_reservations") as any)
+    .update({
+      status: "cancelled",
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", reservationId);
+
+  if (updateError) {
+    console.error("Error updating reservation status:", updateError);
+    return { error: "Failed to update reservation status." };
+  }
+
+  revalidatePath("/dashboard");
+  revalidatePath("/(main)/dashboard", "page");
+  revalidatePath("/profile");
+
+  return { 
+     success: true, 
+     message: `Reservation cancelled successfully. A refund of ${formatNaira(refundAmount)} (after 10% restocking fee) is being processed.` 
+   };
+ }
+
+/**
+ * Fetches all refunds for the current user.
+ */
+export async function getMyRefunds() {
+  const profile = await getUserProfile();
+  if (!profile) return { error: "Unauthorized", refunds: [] };
+
+  const supabase = await createClient();
+  const { data, error } = await (supabase.from("refunds") as any)
+    .select(`
+      *,
+      products (
+        name,
+        main_image
+      )
+    `)
+    .eq("user_id", profile.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching refunds:", error);
+    return { error: "Failed to fetch refunds", refunds: [] };
+  }
+
+  return { success: true, refunds: data || [] };
 }

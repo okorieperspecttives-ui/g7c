@@ -7,6 +7,7 @@ import { motion } from "framer-motion";
 import { Zap, ShoppingBag, Heart, User, ArrowRight, Loader2, CreditCard } from "lucide-react";
 import Link from "next/link";
 import LayawayReservations from "@/components/dashboard/LayawayReservations";
+import RefundsSection from "@/components/dashboard/RefundsSection";
 
 export default function DashboardPage() {
   const [user, setUser] = useState<any>(null);
@@ -91,9 +92,10 @@ export default function DashboardPage() {
           ))}
         </div>
 
-        {/* Layaway Section */}
-        <div className="mb-16">
+        {/* Layaway & Refunds Section */}
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-2 mb-16">
           <LayawayReservations />
+          <RefundsSection />
         </div>
 
         {/* Activity Section */}

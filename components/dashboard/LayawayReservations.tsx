@@ -4,16 +4,18 @@ import { useEffect, useState } from "react";
 import { getMyReservations } from "@/lib/actions/layaway";
 import { formatNaira } from "@/lib/products";
 import { motion, AnimatePresence } from "framer-motion";
-import { CreditCard, Timer, ArrowRight, Loader2, CheckCircle2, AlertTriangle, Wallet, X, ShoppingBag } from "lucide-react";
+import { CreditCard, Timer, ArrowRight, Loader2, CheckCircle2, AlertTriangle, Wallet, X, ShoppingBag, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { getPublicUrl } from "@/lib/supabase";
 import PaymentModal from "./PaymentModal";
+import CancellationModal from "./CancellationModal";
 
 export default function LayawayReservations() {
   const [reservations, setReservations] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isListOpen, setIsListOpen] = useState(false);
   const [selectedReservation, setSelectedReservation] = useState<any>(null);
+  const [selectedCancelReservation, setSelectedCancelReservation] = useState<any>(null);
 
   const fetchReservations = async (silent = false) => {
     if (!silent) setIsLoading(true);
@@ -122,7 +124,7 @@ export default function LayawayReservations() {
                 </button>
               </div>
 
-              {reservations.length === 0 ? (
+              {reservations.filter(r => r.status !== 'cancelled').length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center">
                   <div className="mb-6 rounded-full bg-secondary p-8">
                     <CreditCard className="h-12 w-12 text-muted-foreground" />
@@ -134,13 +136,16 @@ export default function LayawayReservations() {
                 </div>
               ) : (
                 <div className="space-y-6">
-                  {reservations.map((res) => (
-                    <ReservationCard 
-                      key={res.id} 
-                      reservation={res} 
-                      onPay={() => setSelectedReservation(res)} 
-                    />
-                  ))}
+                  {reservations
+                    .filter(r => r.status !== 'cancelled')
+                    .map((res) => (
+                      <ReservationCard 
+                        key={res.id} 
+                        reservation={res} 
+                        onPay={() => setSelectedReservation(res)} 
+                        onCancel={() => setSelectedCancelReservation(res)}
+                      />
+                    ))}
                 </div>
               )}
             </motion.div>
@@ -155,11 +160,19 @@ export default function LayawayReservations() {
         reservation={selectedReservation}
         onSuccess={handlePaymentSuccess}
       />
+
+      {/* Cancellation Modal */}
+      <CancellationModal
+        isOpen={!!selectedCancelReservation}
+        onClose={() => setSelectedCancelReservation(null)}
+        reservation={selectedCancelReservation}
+        onSuccess={handlePaymentSuccess}
+      />
     </>
   );
 }
 
-function ReservationCard({ reservation, onPay }: { reservation: any; onPay: () => void }) {
+function ReservationCard({ reservation, onPay, onCancel }: { reservation: any; onPay: () => void; onCancel: () => void }) {
   const product = reservation.products;
   const total = Number(reservation.total_amount);
   const paid = Number(reservation.paid_amount);
@@ -217,22 +230,31 @@ function ReservationCard({ reservation, onPay }: { reservation: any; onPay: () =
         </div>
 
         {/* Action / Balance */}
-        <div className="flex items-center justify-between pt-2">
-          <div>
-            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground">Remaining</p>
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
+          <div className="flex justify-between sm:block w-full sm:w-auto">
+            <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground sm:mb-1">Remaining</p>
             <p className="text-lg font-black text-foreground">{formatNaira(remaining)}</p>
           </div>
           
           {reservation.status === 'active' ? (
-            <button
-              onClick={onPay}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-5 py-3 text-xs font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
-            >
-              <Wallet className="h-4 w-4" />
-              Make Next Payment
-            </button>
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <button
+                onClick={onCancel}
+                className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-destructive/20 bg-destructive/5 text-destructive transition-all hover:bg-destructive hover:text-white"
+                title="Cancel Reservation"
+              >
+                <Trash2 className="h-5 w-5" />
+              </button>
+              <button
+                onClick={onPay}
+                className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 rounded-2xl bg-primary px-6 py-4 text-sm font-bold text-primary-foreground shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-95"
+              >
+                <Wallet className="h-4 w-4" />
+                <span>Pay Next</span>
+              </button>
+            </div>
           ) : (
-            <div className="flex items-center gap-2 text-emerald-500 font-bold uppercase tracking-widest text-[10px]">
+            <div className="flex items-center gap-2 text-emerald-500 font-bold uppercase tracking-widest text-[10px] justify-end">
               <CheckCircle2 className="h-4 w-4" />
               Fully Paid
             </div>
