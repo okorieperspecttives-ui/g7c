@@ -1,0 +1,29 @@
+import { createBrowserClient } from '@supabase/ssr'
+import { Database } from '../types/database.types';
+
+export const createClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error(
+      'Missing Supabase environment variables. Please check your .env.local file:\n' +
+      '- NEXT_PUBLIC_SUPABASE_URL\n' +
+      '- NEXT_PUBLIC_SUPABASE_ANON_KEY'
+    );
+  }
+
+  return createBrowserClient<Database>(supabaseUrl, supabaseAnonKey);
+};
+
+/**
+ * Helper to get the public URL for a file in Supabase Storage.
+ * @param bucket The name of the storage bucket
+ * @param path The path to the file within the bucket
+ * @returns The public URL string
+ */
+export const getPublicUrl = (bucket: 'product-images' | 'avatars' | 'brand-logos' | 'category-images', path: string) => {
+  const supabase = createClient();
+  const { data } = supabase.storage.from(bucket).getPublicUrl(path);
+  return data.publicUrl;
+};

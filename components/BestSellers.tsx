@@ -1,12 +1,20 @@
-"use client";
-
-import { PRODUCTS } from "@/lib/products";
 import ProductCard from "./ProductCard";
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { getFeaturedProducts } from "@/lib/supabase/products";
+import { ProductDetail } from "@/lib/types";
 
-const BestSellers = () => {
-  const bestSellers = PRODUCTS.filter((p) => p.isBestSeller).slice(0, 4);
+const BestSellers = async () => {
+  let products: ProductDetail[] = [];
+  
+  try {
+    products = await getFeaturedProducts(4);
+  } catch (err) {
+    console.error("Failed to fetch best sellers:", err);
+    return null; // Silently hide if error occurs for better UX on home
+  }
+
+  if (products.length === 0) return null;
 
   return (
     <section className="mx-auto max-w-screen-2xl px-4 py-20 sm:px-6 lg:px-8">
@@ -29,7 +37,7 @@ const BestSellers = () => {
       </div>
 
       <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {bestSellers.map((product) => (
+        {products.map((product) => (
           <ProductCard key={product.id} product={product} />
         ))}
       </div>

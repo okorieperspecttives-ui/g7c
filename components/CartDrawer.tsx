@@ -6,7 +6,8 @@ import { X, ShoppingBag, ArrowRight, Plus, Minus, Trash2 } from "lucide-react";
 import Image from "next/image";
 import { formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
-import { useState } from "react";
+import { useState, useMemo } from "react";
+import { getPublicUrl } from "@/lib/supabase";
 
 interface CartDrawerProps {
   isOpen: boolean;
@@ -59,40 +60,52 @@ const CartDrawer = ({ isOpen, onClose }: CartDrawerProps) => {
               <div className="flex-1 overflow-y-auto p-6">
                 {items.length > 0 ? (
                   <div className="flex flex-col gap-6">
-                    {items.map((item) => (
-                      <div key={item.id} className="flex gap-4">
-                        <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-card">
-                          <Image src={item.main_image || ""} alt={item.name} fill className="object-contain p-2" />
-                        </div>
-                        <div className="flex flex-1 flex-col justify-between">
-                          <div>
-                            <h4 className="text-sm font-bold text-foreground line-clamp-1">{item.name}</h4>
-                            <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{item.brand_name || "Generic"}</p>
+                    {items.map((item) => {
+                      const price = (item as any).markup_price || (item as any).price || 0;
+                      const rawImage = (item as any).main_image || (item as any).image || "";
+                      const brand = (item as any).brand_name || (item as any).brand || "";
+
+                      const imageUrl = (() => {
+                        if (!rawImage) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
+                        if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
+                        return getPublicUrl("product-images", rawImage);
+                      })();
+
+                      return (
+                        <div key={item.id} className="flex gap-4">
+                          <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-card">
+                            <Image src={imageUrl} alt={item.name} fill className="object-contain p-2" />
                           </div>
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center rounded-lg border border-border bg-card p-1 scale-90 -ml-2">
-                              <button 
-                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                className="h-6 w-6 flex cursor-pointer items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-                              >
-                                <Minus className="h-3 w-3" />
-                              </button>
-                              <span className="w-6 text-center text-xs font-bold text-foreground">{item.quantity}</span>
-                              <button 
-                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                className="h-6 w-6 flex cursor-pointer items-center justify-center text-muted-foreground hover:text-primary transition-colors"
-                              >
-                                <Plus className="h-3 w-3" />
-                              </button>
+                          <div className="flex flex-1 flex-col justify-between">
+                            <div>
+                              <h4 className="text-sm font-bold text-foreground line-clamp-1">{item.name}</h4>
+                              <p className="text-xs text-muted-foreground uppercase tracking-wider font-medium">{item.brand_name || "Generic"}</p>
                             </div>
-                            <div className="flex items-center gap-3">
-                              <span className="text-sm font-bold text-primary">{formatNaira(item.markup_price)}</span>
-                              <button 
-                                onClick={() => removeFromCart(item.id)}
-                                className="text-muted-foreground hover:text-destructive transition-colors"
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </button>
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center rounded-lg border border-border bg-card p-1 scale-90 -ml-2">
+                                <button 
+                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  className="h-6 w-6 flex cursor-pointer items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <Minus className="h-3 w-3" />
+                                </button>
+                                <span className="w-6 text-center text-xs font-bold text-foreground">{item.quantity}</span>
+                                <button 
+                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  className="h-6 w-6 flex cursor-pointer items-center justify-center text-muted-foreground hover:text-primary transition-colors"
+                                >
+                                  <Plus className="h-3 w-3" />
+                                </button>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-sm font-bold text-primary">{formatNaira(item.markup_price)}</span>
+                                <button 
+                                  onClick={() => removeFromCart(item.id)}
+                                  className="text-muted-foreground hover:text-destructive transition-colors"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>

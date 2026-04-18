@@ -284,6 +284,108 @@ const GlobalSearch = () => {
   );
 };
 
+const UserDropdown = ({ user, handleLogout }: { user: User; handleLogout: () => void }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+        setIsOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  return (
+    <div 
+      className="relative" 
+      ref={dropdownRef}
+      onMouseEnter={() => setIsOpen(true)}
+      onMouseLeave={() => setIsOpen(false)}
+    >
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        className={iconButtonClassName}
+      >
+        {user.user_metadata?.avatar_url ? (
+          <Image
+            src={user.user_metadata.avatar_url}
+            alt="Avatar"
+            width={24}
+            height={24}
+            className="rounded-full"
+          />
+        ) : (
+          <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/10 text-xs font-black text-primary uppercase border border-primary/20">
+            {user.email?.[0]}
+          </div>
+        )}
+      </button>
+
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2, ease: "easeOut" }}
+            className="absolute right-0 top-full pt-2 z-50 origin-top-right"
+          >
+            <div className="w-64 overflow-hidden rounded-[2rem] border border-border bg-card p-2 shadow-2xl">
+              <div className="px-5 py-4 border-b border-border/50 mb-1">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] mb-1">
+                  Signed in as
+                </p>
+                <p className="text-sm font-bold text-foreground truncate">
+                  {user.email}
+                </p>
+              </div>
+              <div className="p-1 space-y-1">
+                <Link
+                  href="/dashboard"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 w-full text-left rounded-2xl px-3 py-3 text-sm font-bold text-foreground hover:bg-secondary transition-all group"
+                >
+                  <div className="h-9 w-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                    <Zap className="h-4 w-4" />
+                  </div>
+                  Dashboard
+                </Link>
+                <Link
+                  href="/profile"
+                  onClick={() => setIsOpen(false)}
+                  className="flex items-center gap-3 w-full text-left rounded-2xl px-3 py-3 text-sm font-bold text-foreground hover:bg-secondary transition-all group"
+                >
+                  <div className="h-9 w-9 rounded-xl bg-secondary flex items-center justify-center text-muted-foreground group-hover:bg-primary group-hover:text-white transition-colors">
+                    <UserRound className="h-4 w-4" />
+                  </div>
+                  My Profile
+                </Link>
+                <div className="pt-1 mt-1 border-t border-border/50">
+                  <button
+                    onClick={() => {
+                      setIsOpen(false);
+                      handleLogout();
+                    }}
+                    className="flex items-center gap-3 w-full text-left rounded-2xl px-3 py-3 text-sm font-bold text-destructive hover:bg-destructive/10 transition-all group"
+                  >
+                    <div className="h-9 w-9 rounded-xl bg-destructive/10 flex items-center justify-center group-hover:bg-destructive group-hover:text-white transition-colors">
+                      <X className="h-4 w-4" />
+                    </div>
+                    Sign Out
+                  </button>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+};
+
 const Navbar = () => {
   const router = useRouter();
   const [isScrolled, setIsScrolled] = useState(false);
@@ -433,36 +535,7 @@ const Navbar = () => {
             </button>
 
             {user ? (
-              <div className="group relative">
-                <button className={iconButtonClassName}>
-                  {user.user_metadata.avatar_url ? (
-                    <Image
-                      src={user.user_metadata.avatar_url}
-                      alt="Avatar"
-                      width={24}
-                      height={24}
-                      className="rounded-full"
-                    />
-                  ) : (
-                    <div className="flex h-6 w-6 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary uppercase">
-                      {user.email?.[0]}
-                    </div>
-                  )}
-                </button>
-                <div className="absolute right-0 top-full pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200">
-                  <div className="w-48 overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-xl">
-                    <div className="px-3 py-2 text-xs font-bold text-muted-foreground border-b border-border mb-1 truncate">
-                      {user.email}
-                    </div>
-                    <button
-                      onClick={handleLogout}
-                      className="w-full text-left rounded-xl px-3 py-2 text-sm font-bold text-foreground hover:bg-secondary hover:text-destructive transition-colors"
-                    >
-                      Log Out
-                    </button>
-                  </div>
-                </div>
-              </div>
+              <UserDropdown user={user} handleLogout={handleLogout} />
             ) : (
               <Link href="/auth/login" className={iconButtonClassName}>
                 <UserRound className="h-5 w-5" strokeWidth={2} />

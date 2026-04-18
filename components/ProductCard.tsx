@@ -7,8 +7,9 @@ import { formatNaira } from "@/lib/products";
 import { Product } from "@/lib/types";
 import { ShoppingCart, CreditCard, Plus } from "lucide-react";
 import { useCartStore } from "@/lib/store/useCartStore";
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import InstallmentModal from "./InstallmentModal";
+import { getPublicUrl } from "@/lib/supabase";
 
 interface ProductCardProps {
   product: Product;
@@ -33,17 +34,24 @@ const ProductCard = ({ product }: ProductCardProps) => {
     router.push("/checkout");
   };
 
-  const handleInstallmentClick = (e: React.MouseEvent) => {
+  const handleLayawayClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
     setIsInstallmentOpen(true);
   };
 
+  // Get public URL if it's a storage path, otherwise use as is (for assets/ legacy support)
+  const imageUrl = useMemo(() => {
+    const rawImage = product.main_image || "";
+    if (!rawImage) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
+    if (rawImage.startsWith("http") || rawImage.startsWith("/")) return rawImage;
+    return getPublicUrl("product-images", rawImage);
+  }, [product.main_image]);
+
   const price = product.markup_price || 0;
   const originalPrice = product.base_price || price;
-  const image = product.main_image || "";
-  const category = product.category_name || "";
-  const brand = product.brand_name || "";
+  const category = product.category_name || "Energy";
+  const brand = product.brand_name || "Global 7CS";
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/10">
@@ -53,9 +61,10 @@ const ProductCard = ({ product }: ProductCardProps) => {
         className="relative aspect-square overflow-hidden bg-muted"
       >
         <Image
-          src={image}
+          src={imageUrl}
           alt={product.name}
           fill
+          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
           className="object-cover transition-transform duration-500 group-hover:scale-110"
         />
         <div className="absolute top-4 left-4 rounded-full bg-primary/90 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-primary-foreground backdrop-blur-sm">
@@ -97,11 +106,11 @@ const ProductCard = ({ product }: ProductCardProps) => {
               Buy Now
             </button>
             <button
-              onClick={handleInstallmentClick}
-              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-xs font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
+              onClick={handleLayawayClick}
+              className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-primary py-2.5 text-[10px] font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
             >
-              <CreditCard className="h-3.5 w-3.5" />
-              Installment
+              <CreditCard className="h-3 w-3" />
+              Reserve & Pay Small Small
             </button>
           </div>
           <button
@@ -119,6 +128,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         onClose={() => setIsInstallmentOpen(false)}
         productPrice={price}
         productName={product.name}
+        onSuccess={() => router.push("/dashboard")}
       />
     </div>
   );

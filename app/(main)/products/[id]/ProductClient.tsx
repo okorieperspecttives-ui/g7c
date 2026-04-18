@@ -1,0 +1,374 @@
+"use client";
+
+import { useState, useMemo } from "react";
+import Image from "next/image";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { formatNaira } from "@/lib/products";
+import { Product, ProductDetail } from "@/lib/types";
+import { getPublicUrl } from "@/lib/supabase";
+import {
+  ChevronLeft,
+  ShoppingCart,
+  CreditCard,
+  ShieldCheck,
+  Zap,
+  Battery,
+  BadgeCheck,
+  Star,
+  Plus,
+  Minus,
+} from "lucide-react";
+import ProductCard from "@/components/ProductCard";
+import { useCartStore } from "@/lib/store/useCartStore";
+import InstallmentModal from "@/components/InstallmentModal";
+
+export default function ProductClient({ product }: { product: ProductDetail }) {
+  const price = product.markup_price || 0;
+  const originalPrice = product.base_price || price;
+  
+  // Gallery Logic
+  const galleryImages = useMemo(() => {
+    const images: string[] = [];
+    
+    // Add main image first
+    if (product.main_image) {
+      images.push(product.main_image);
+    }
+    
+    // Add gallery images from DB
+    if (product.gallery_images && Array.isArray(product.gallery_images)) {
+      product.gallery_images.forEach((img: string | null) => {
+        if (typeof img === 'string' && img.trim() !== '') {
+          images.push(img);
+        }
+      });
+    }
+    
+    return images;
+  }, [product.main_image, product.gallery_images]);
+
+  const [activeImage, setActiveImage] = useState(0);
+
+  const getImageUrl = (path: string) => {
+    if (!path) return "https://images.unsplash.com/photo-1581094288338-2314dddb7bc3?q=80&w=2070&auto=format&fit=crop";
+    if (path.startsWith("http") || path.startsWith("/")) return path;
+    return getPublicUrl("product-images", path);
+  };
+
+  const activeImageUrl = useMemo(() => {
+    return getImageUrl(galleryImages[activeImage] || product.main_image || "");
+  }, [galleryImages, activeImage, product.main_image]);
+
+  const category = product.category_name || product.category?.name || "Energy";
+  const brand = product.brand_name || product.brand?.name || "Global 7CS";
+  const features = (product.features as string[]) || [];
+  const specifications = product.specifications || [];
+
+  // Find related products (same category)
+  const relatedProducts = useMemo<Product[]>(() => {
+    // If we don't have enough data yet, we'll return empty for now
+    // In a real scenario, you might want to fetch these from Supabase too
+    return [];
+  }, []);
+
+  const [quantity, setQuantity] = useState(1);
+  const [isInstallmentOpen, setIsInstallmentOpen] = useState(false);
+  const addToCart = useCartStore((state) => state.addToCart);
+  const router = useRouter();
+
+  const handleQuantityChange = (delta: number) => {
+    setQuantity((prev) => Math.max(1, prev + delta));
+  };
+
+  const handleAddToCart = () => {
+    addToCart(product, quantity);
+  };
+
+  const handleBuyNow = () => {
+    addToCart(product, quantity);
+    router.push("/checkout");
+  };
+
+  const handleInstallmentSuccess = () => {
+    // For single product reservation, we don't necessarily clear the cart
+    // but we might want to redirect to dashboard
+    router.push("/dashboard");
+  };
+
+  const productSchema = {
+    "@context": "https://schema.org/",
+    "@type": "Product",
+    name: product.name,
+    image: activeImageUrl,
+    description: product.description,
+    brand: {
+      "@type": "Brand",
+      name: product.brand_name || "Generic",
+    },
+    offers: {
+      "@type": "Offer",
+      priceCurrency: "NGN",
+      price: product.markup_price,
+      availability: "https://schema.org/InStock",
+    },
+  };
+
+  return (
+    <main className="min-h-screen bg-background pt-24 pb-20">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(productSchema) }}
+      />
+      <div className="mx-auto max-w-screen-2xl px-4 py-8 sm:px-6 lg:px-8">
+        {/* Breadcrumbs / Back Link */}
+        <Link
+          href="/shop"
+          className="mb-8 inline-flex items-center gap-2 text-sm font-medium text-muted-foreground transition-colors hover:text-primary"
+        >
+          <ChevronLeft className="h-4 w-4" />
+          Back to Energy Marketplace
+        </Link>
+
+        <div className="grid grid-cols-1 gap-12 lg:grid-cols-2 lg:gap-16">
+          {/* Product Image Gallery */}
+          <div className="flex flex-col gap-4">
+            <div className="relative aspect-square overflow-hidden rounded-3xl border border-border bg-card">
+              <Image
+                src={activeImageUrl}
+                alt={product.name}
+                fill
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 800px"
+                className="object-contain p-8"
+                priority
+              />
+            </div>
+            
+            {/* Gallery Thumbnails */}
+            {galleryImages.length > 1 && (
+              <div className="grid grid-cols-4 gap-4">
+                {galleryImages.map((img, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setActiveImage(i)}
+                    className={`relative aspect-square cursor-pointer rounded-2xl border transition-all ${
+                      activeImage === i 
+                        ? "border-primary ring-2 ring-primary/20 opacity-100 shadow-lg" 
+                        : "border-border opacity-50 hover:border-primary/50 hover:opacity-100"
+                    }`}
+                  >
+                    <Image
+                      src={getImageUrl(img)}
+                      alt={`${product.name} Gallery ${i + 1}`}
+                      fill
+                      sizes="120px"
+                      className="object-contain p-2"
+                    />
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Product Details */}
+          <div className="flex flex-col">
+            <div className="mb-4 flex flex-wrap items-center gap-4">
+              <span className="rounded-full bg-primary/10 px-4 py-1.5 text-xs font-bold uppercase tracking-widest text-primary">
+                {product.category_name || "Energy Solution"}
+              </span>
+              <span className="flex items-center gap-1 text-sm font-bold text-muted-foreground">
+                <Star className="h-4 w-4 fill-primary text-primary" />
+                4.9 (48 reviews)
+              </span>
+              <span className="flex items-center gap-1 text-sm font-bold text-primary">
+                <BadgeCheck className="h-4 w-4" />
+                In Stock
+              </span>
+            </div>
+
+            <h1 className="mb-2 text-4xl font-bold tracking-tight text-foreground sm:text-5xl">
+              {product.name}
+            </h1>
+            <p className="mb-6 text-xl font-medium text-muted-foreground">
+              Brand:{" "}
+              <span className="text-primary font-bold">{product.brand_name || "Generic"}</span>
+            </p>
+
+            <p className="mb-8 text-lg leading-relaxed text-muted-foreground sm:text-xl">
+              {product.description}
+            </p>
+
+            <div className="mb-10 flex items-baseline gap-4">
+              <span className="text-4xl font-bold text-primary">
+                {formatNaira(product.markup_price)}
+              </span>
+              <span className="text-xl text-muted-foreground line-through opacity-50">
+                {formatNaira(product.base_price)}
+              </span>
+            </div>
+
+            {/* Quantity Selector */}
+            <div className="mb-10 flex items-center gap-4">
+              <span className="text-sm font-bold text-foreground uppercase tracking-widest">
+                Quantity:
+              </span>
+              <div className="flex items-center rounded-xl border border-border bg-card p-1">
+                <button
+                  onClick={() => handleQuantityChange(-1)}
+                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-xl font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+                <span className="w-12 text-center font-bold text-foreground">
+                  {quantity}
+                </span>
+                <button
+                  onClick={() => handleQuantityChange(1)}
+                  className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-lg text-xl font-bold text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="mb-10 flex flex-col gap-4 sm:flex-row">
+              <button
+                onClick={handleBuyNow}
+                className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl bg-primary py-5 text-base font-bold text-primary-foreground transition-all hover:scale-[1.02] active:scale-95 shadow-xl shadow-primary/20"
+              >
+                <ShoppingCart className="h-5 w-5" />
+                Buy Now
+              </button>
+              <button
+                onClick={handleAddToCart}
+                className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl border-2 border-primary py-5 text-base font-bold text-primary transition-all hover:bg-primary/10 active:scale-95"
+              >
+                <Plus className="h-5 w-5" />
+                Add to Cart
+              </button>
+              <button
+                onClick={() => setIsInstallmentOpen(true)}
+                className="flex cursor-pointer flex-1 items-center justify-center gap-3 rounded-2xl border-2 border-border bg-card py-5 text-base font-bold text-foreground transition-all hover:bg-secondary active:scale-95"
+              >
+                <CreditCard className="h-5 w-5" />
+                Reserve & Pay Small Small
+              </button>
+            </div>
+
+            <div className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-6">
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <ShieldCheck className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium text-foreground">
+                  Secure payments powered by local gateways.
+                </p>
+              </div>
+              <div className="flex items-center gap-4">
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10 text-primary">
+                  <BadgeCheck className="h-5 w-5" />
+                </div>
+                <p className="text-sm font-medium text-foreground">
+                  12-month standard warranty included.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Technical Specifications Table */}
+        <div className="mt-20">
+          <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
+            Technical Specifications
+          </h2>
+          <div className="overflow-hidden rounded-3xl border border-border bg-card">
+            <table className="w-full text-left">
+              <tbody>
+                {specifications.map((spec, i) => (
+                  <tr
+                    key={spec.label}
+                    className={i % 2 === 0 ? "bg-background/50" : ""}
+                  >
+                    <td className="px-6 py-4 text-sm font-bold text-muted-foreground uppercase">
+                      {spec.label}
+                    </td>
+                    <td className="px-6 py-4 text-sm font-medium text-foreground">
+                      {spec.value}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+
+        {/* Features Grid */}
+        <div className="mt-20">
+          <h2 className="mb-8 text-3xl font-bold tracking-tight text-foreground">
+            Key Features
+          </h2>
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                  {i % 3 === 0 ? (
+                    <ShieldCheck className="h-6 w-6" />
+                  ) : i % 3 === 1 ? (
+                    <Zap className="h-6 w-6" />
+                  ) : (
+                    <Battery className="h-6 w-6" />
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Related Products */}
+        {relatedProducts.length > 0 && (
+          <div className="mt-32">
+            <div className="flex items-center justify-between mb-12">
+              <h2 className="text-3xl font-bold tracking-tight text-foreground">
+                You May Also Like
+              </h2>
+              <Link
+                href="/shop"
+                className="text-sm font-bold text-primary hover:underline"
+              >
+                View All Marketplace
+              </Link>
+            </div>
+
+            <div className="relative">
+              <div className="flex gap-8 overflow-x-auto pb-12 snap-x snap-mandatory scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+                {relatedProducts.map((p) => (
+                  <div
+                    key={p.id}
+                    className="min-w-[280px] sm:min-w-[320px] snap-start"
+                  >
+                    <ProductCard product={p} />
+                  </div>
+                ))}
+              </div>
+
+              {/* Desktop fade indicators */}
+              <div className="hidden lg:block absolute inset-y-0 right-0 w-20 bg-gradient-to-l from-background to-transparent pointer-events-none" />
+            </div>
+          </div>
+        )}
+      </div>
+
+      <InstallmentModal
+        isOpen={isInstallmentOpen}
+        onClose={() => setIsInstallmentOpen(false)}
+        productPrice={product.markup_price}
+        productName={product.name}
+        onSuccess={handleInstallmentSuccess}
+      />
+    </main>
+  );
+}
