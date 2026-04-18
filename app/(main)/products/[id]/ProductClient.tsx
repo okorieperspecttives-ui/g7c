@@ -5,7 +5,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { formatNaira } from "@/lib/products";
-import { Product } from "@/lib/types";
+import { Product, ProductDetail } from "@/lib/types";
 import { getPublicUrl } from "@/lib/supabase";
 import {
   ChevronLeft,
@@ -23,11 +23,7 @@ import ProductCard from "@/components/ProductCard";
 import { useCartStore } from "@/lib/store/useCartStore";
 import InstallmentModal from "@/components/InstallmentModal";
 
-interface ProductClientProps {
-  product: Product;
-}
-
-export default function ProductClient({ product }: { product: Product }) {
+export default function ProductClient({ product }: { product: ProductDetail }) {
   const price = product.markup_price || 0;
   const originalPrice = product.base_price || price;
   
@@ -42,7 +38,7 @@ export default function ProductClient({ product }: { product: Product }) {
     
     // Add gallery images from DB
     if (product.gallery_images && Array.isArray(product.gallery_images)) {
-      product.gallery_images.forEach((img: any) => {
+      product.gallery_images.forEach((img: string | null) => {
         if (typeof img === 'string' && img.trim() !== '') {
           images.push(img);
         }
@@ -64,8 +60,8 @@ export default function ProductClient({ product }: { product: Product }) {
     return getImageUrl(galleryImages[activeImage] || product.main_image || "");
   }, [galleryImages, activeImage, product.main_image]);
 
-  const category = product.category_name || (product as any).category?.name || "Energy";
-  const brand = product.brand_name || (product as any).brand?.name || "Global 7CS";
+  const category = product.category_name || product.category?.name || "Energy";
+  const brand = product.brand_name || product.brand?.name || "Global 7CS";
   const features = (product.features as string[]) || [];
   const specifications = product.specifications || [];
 
@@ -92,6 +88,12 @@ export default function ProductClient({ product }: { product: Product }) {
   const handleBuyNow = () => {
     addToCart(product, quantity);
     router.push("/checkout");
+  };
+
+  const handleInstallmentSuccess = () => {
+    // For single product reservation, we don't necessarily clear the cart
+    // but we might want to redirect to dashboard
+    router.push("/dashboard");
   };
 
   const productSchema = {
@@ -282,7 +284,7 @@ export default function ProductClient({ product }: { product: Product }) {
           <div className="overflow-hidden rounded-3xl border border-border bg-card">
             <table className="w-full text-left">
               <tbody>
-                {specifications.map((spec: any, i: number) => (
+                {specifications.map((spec, i) => (
                   <tr
                     key={spec.label}
                     className={i % 2 === 0 ? "bg-background/50" : ""}
@@ -306,7 +308,7 @@ export default function ProductClient({ product }: { product: Product }) {
             Key Features
           </h2>
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {features.map((feature: string, i: number) => (
+            {features.map((feature, i) => (
               <div
                 key={i}
                 className="flex items-center gap-4 rounded-2xl border border-border bg-card p-6"
@@ -367,6 +369,7 @@ export default function ProductClient({ product }: { product: Product }) {
         onClose={() => setIsInstallmentOpen(false)}
         productPrice={price}
         productName={product.name}
+        onSuccess={handleInstallmentSuccess}
       />
     </main>
   );

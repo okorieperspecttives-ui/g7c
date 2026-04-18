@@ -4,6 +4,7 @@ import { useState } from "react";
 import Link from "next/link";
 import { formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { CartItem } from "@/lib/types";
 import {
   ChevronLeft, 
   ArrowRight, 
@@ -39,13 +40,21 @@ export default function CheckoutPage() {
     e.preventDefault();
     setIsLoading(true);
 
+    // Validate form (basic check)
+    const form = e.currentTarget as HTMLFormElement;
+    if (!form.checkValidity()) {
+      form.reportValidity();
+      setIsLoading(false);
+      return;
+    }
+
     if (paymentMethod === "layaway" || paymentMethod === "transfer") {
       setIsPaymentModalOpen(true);
       setIsLoading(false);
       return;
     }
 
-    // Simulate API call
+    // Simulate API call for other methods (if any)
     setTimeout(() => {
       setIsLoading(false);
       setIsOrdered(true);
@@ -54,7 +63,15 @@ export default function CheckoutPage() {
     }, 2000);
   };
 
+  const handleInstallmentSuccess = () => {
+    setIsLoading(false);
+    setIsOrdered(true);
+    clearCart();
+    window.scrollTo(0, 0);
+  };
+
   if (isOrdered) {
+    const isLayaway = paymentMethod === "layaway";
     return (
       <main className="min-h-screen bg-background pt-32 pb-20 px-4">
         <motion.div 
@@ -65,12 +82,16 @@ export default function CheckoutPage() {
           <div className="mb-8 inline-flex h-24 w-24 items-center justify-center rounded-full bg-primary/10 text-primary">
             <CheckCircle2 className="h-12 w-12" />
           </div>
-          <h1 className="text-4xl font-bold text-foreground mb-4">Order Placed Successfully!</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-4">
+            {isLayaway ? "Reservation Confirmed!" : "Order Placed Successfully!"}
+          </h1>
           <p className="text-lg text-muted-foreground mb-4">
-            Thank you for choosing Global 7CS. Your order reference is <span className="font-bold text-foreground">#{orderId}</span>.
+            Thank you for choosing Global 7CS. Your {isLayaway ? "reservation" : "order"} reference is <span className="font-bold text-foreground">#{orderId}</span>.
           </p>
           <p className="text-muted-foreground mb-10">
-            Our team will contact you shortly via phone or WhatsApp to confirm delivery details and installation requirements.
+            {isLayaway 
+              ? "Your items have been reserved. Once we confirm your 40% deposit, you'll be able to track your payment progress in your dashboard."
+              : "Our team will contact you shortly via phone or WhatsApp to confirm delivery details and installation requirements."}
           </p>
           <div className="flex flex-col sm:flex-row justify-center gap-4">
             <Link
@@ -80,10 +101,13 @@ export default function CheckoutPage() {
               <Home className="h-4 w-4" />
               Return Home
             </Link>
-            <button className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary px-8 py-4 text-sm font-bold text-primary transition-all hover:bg-primary/10">
-              <MessageCircle className="h-4 w-4" />
-              Track on WhatsApp
-            </button>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center justify-center gap-2 rounded-full border-2 border-primary px-8 py-4 text-sm font-bold text-primary transition-all hover:bg-primary/10"
+            >
+              <Timer className="h-4 w-4" />
+              View My Reservations
+            </Link>
           </div>
         </motion.div>
       </main>
@@ -196,7 +220,22 @@ export default function CheckoutPage() {
                     <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
                       <Timer className="h-5 w-5" />
                     </div>
-                    {paymentMethod === 'layaway' && <CheckCircle2 className="h-5 w-5 text-primary" />}
+                    {paymentMethod === 'layaway' && (
+                      <div className="flex items-center gap-2">
+                        <button 
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            setIsPaymentModalOpen(true);
+                          }}
+                          className="text-[10px] font-bold uppercase tracking-widest text-primary hover:underline"
+                        >
+                          View Plan
+                        </button>
+                        <CheckCircle2 className="h-5 w-5 text-primary" />
+                      </div>
+                    )}
                   </div>
                   <div>
                     <p className="text-sm font-bold text-foreground">Reserve & Pay Small Small</p>
@@ -213,10 +252,10 @@ export default function CheckoutPage() {
               <div className="p-8 border-b border-border bg-muted/30">
                 <h2 className="text-xl font-bold text-foreground mb-6">Order Summary</h2>
                 <div className="space-y-4">
-                  {items.map((item) => (
+                  {items.map((item: CartItem) => (
                     <div key={item.id} className="flex justify-between gap-4">
                       <span className="text-sm text-muted-foreground flex-1 line-clamp-1">{item.quantity}x {item.name}</span>
-                      <span className="text-sm font-bold text-foreground">{formatNaira(item.markup_price * item.quantity)}</span>
+                      <span className="text-sm font-bold text-foreground">{formatNaira((item.markup_price || 0) * item.quantity)}</span>
                     </div>
                   ))}
                 </div>
@@ -264,8 +303,10 @@ export default function CheckoutPage() {
         isOpen={isPaymentModalOpen}
         onClose={() => setIsPaymentModalOpen(false)}
         productPrice={total}
-        productName="your order"
+        productName="your entire cart"
         isDirectPayment={paymentMethod === 'transfer'}
+        onSuccess={handleInstallmentSuccess}
+        items={items.map(item => ({ name: item.name, quantity: item.quantity }))}
       />
     </main>
   );

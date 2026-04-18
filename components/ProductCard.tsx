@@ -50,8 +50,8 @@ const ProductCard = ({ product }: ProductCardProps) => {
 
   const price = product.markup_price || 0;
   const originalPrice = product.base_price || price;
-  const category = product.category_name || (product as any).category?.name || "Energy";
-  const brand = product.brand_name || (product as any).brand?.name || "Global 7CS";
+  const category = product.category_name || "Energy";
+  const brand = product.brand_name || "Global 7CS";
 
   return (
     <div className="group flex flex-col overflow-hidden rounded-2xl border border-border bg-card transition-all duration-300 hover:border-primary hover:shadow-2xl hover:shadow-primary/10">
@@ -128,6 +128,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
         onClose={() => setIsInstallmentOpen(false)}
         productPrice={price}
         productName={product.name}
+        onSuccess={() => router.push("/dashboard")}
       />
     </div>
   );

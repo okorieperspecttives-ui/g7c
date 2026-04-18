@@ -12,9 +12,19 @@ interface InstallmentModalProps {
   productPrice: number;
   productName: string;
   isDirectPayment?: boolean;
+  onSuccess?: () => void;
+  items?: { name: string; quantity: number }[];
 }
 
-const InstallmentModal = ({ isOpen, onClose, productPrice, productName, isDirectPayment = false }: InstallmentModalProps) => {
+const InstallmentModal = ({ 
+  isOpen, 
+  onClose, 
+  productPrice, 
+  productName, 
+  isDirectPayment = false,
+  onSuccess,
+  items
+}: InstallmentModalProps) => {
   const [showAccountDetails, setShowAccountDetails] = useState(isDirectPayment);
   const [copied, setCopied] = useState(false);
 
@@ -77,6 +87,19 @@ const InstallmentModal = ({ isOpen, onClose, productPrice, productName, isDirect
                   <p className="text-muted-foreground mb-8 font-medium">
                     Secure your <span className="text-foreground font-bold">{productName}</span> today with a 40% deposit and pay the balance gradually.
                   </p>
+
+                  {items && items.length > 0 && (
+                    <div className="mb-8 p-4 rounded-2xl bg-secondary/30 border border-border">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-3">Items to Reserve</p>
+                      <div className="space-y-2 max-h-32 overflow-y-auto pr-2">
+                        {items.map((item, i) => (
+                          <div key={i} className="flex justify-between text-xs font-bold text-foreground">
+                            <span className="opacity-70">{item.quantity}x {item.name}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
 
                   <div className="space-y-4 mb-8">
                     <div className="p-6 rounded-3xl bg-primary/5 border border-primary/20">
@@ -193,12 +216,26 @@ const InstallmentModal = ({ isOpen, onClose, productPrice, productName, isDirect
 
                   <div className="flex flex-col gap-3">
                     <button 
-                      onClick={() => window.open(`https://wa.me/2347079488124?text=I've made a ${isDirectPayment ? 'full payment' : 'deposit'} of ${formatNaira(depositAmount)} for ${productName}`, '_blank')}
+                      onClick={() => {
+                        const message = `I've made a ${isDirectPayment ? 'full payment' : 'deposit'} of ${formatNaira(depositAmount)} for ${productName}`;
+                        window.open(`https://wa.me/2347079488124?text=${encodeURIComponent(message)}`, '_blank');
+                      }}
                       className="w-full rounded-2xl bg-[#25D366] py-5 text-base font-black uppercase tracking-widest text-white shadow-xl shadow-[#25D366]/20 transition-all hover:scale-[1.02] active:scale-95 flex items-center justify-center gap-3"
                     >
                       <MessageCircle className="h-5 w-5 fill-current" />
                       Send Proof on WhatsApp
                     </button>
+                    {onSuccess && (
+                      <button 
+                        onClick={() => {
+                          onSuccess();
+                          onClose();
+                        }}
+                        className="w-full rounded-2xl border-2 border-primary bg-primary/5 py-5 text-base font-black uppercase tracking-widest text-primary transition-all hover:bg-primary/10 active:scale-95"
+                      >
+                        I've Made the Transfer
+                      </button>
+                    )}
                     {!isDirectPayment && (
                       <button 
                         onClick={() => setShowAccountDetails(false)}

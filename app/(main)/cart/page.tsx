@@ -5,6 +5,7 @@ import Link from "next/link";
 import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, X } from "lucide-react";
 import { formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
+import { CartItem } from "@/lib/types";
 import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUrl } from "@/lib/supabase";
@@ -56,7 +57,7 @@ export default function CartPage() {
         <div className="grid grid-cols-1 gap-12 lg:grid-cols-3">
           {/* Cart Items List */}
           <div className="lg:col-span-2 space-y-6">
-            {items.map((item) => {
+            {items.map((item: CartItem) => {
               const price = item.markup_price || 0;
               const brand = item.brand_name || "Global 7CS";
               
