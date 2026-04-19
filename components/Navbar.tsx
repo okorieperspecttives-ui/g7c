@@ -5,7 +5,6 @@ import { useState, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import {
   Menu,
-  Search,
   ShoppingBag,
   UserRound,
   ChevronDown,
@@ -96,190 +95,6 @@ const CategoriesDropdown = () => {
               </div>
             </div>
           </motion.div>
-        )}
-      </AnimatePresence>
-    </div>
-  );
-};
-
-const GlobalSearch = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [query, setQuery] = useState("");
-  const router = useRouter();
-  const searchRef = useRef<HTMLDivElement>(null);
-
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 1024);
-    checkMobile();
-    window.addEventListener("resize", checkMobile);
-    return () => window.removeEventListener("resize", checkMobile);
-  }, []);
-
-  const results = useMemo(() => {
-    if (query.length < 2) return [];
-    return PRODUCTS.filter(
-      (p) =>
-        p.name.toLowerCase().includes(query.toLowerCase()) ||
-        p.description?.toLowerCase().includes(query.toLowerCase()),
-    ).slice(0, 8);
-  }, [query]);
-
-  useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (
-        !isMobile &&
-        searchRef.current &&
-        !searchRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
-    };
-
-    const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setIsOpen(false);
-    };
-
-    if (isOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-      window.addEventListener("keydown", handleEsc);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-      window.removeEventListener("keydown", handleEsc);
-    };
-  }, [isOpen, isMobile]);
-
-  return (
-    <div className="relative" ref={searchRef}>
-      <button
-        onClick={() => setIsOpen(!isOpen)}
-        className={iconButtonClassName}
-      >
-        <Search className="h-5 w-5" strokeWidth={2} />
-      </button>
-
-      <AnimatePresence>
-        {isOpen && (
-          <>
-            {/* Backdrop for Mobile Modal */}
-            {isMobile && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                onClick={() => setIsOpen(false)}
-                className="fixed inset-0 z-[100] bg-black/60 backdrop-blur-sm lg:hidden"
-              />
-            )}
-
-            <motion.div
-              initial={
-                isMobile
-                  ? { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }
-                  : { opacity: 0, y: -10, scale: 0.95 }
-              }
-              animate={
-                isMobile
-                  ? { opacity: 1, scale: 1, x: "-50%", y: "-50%" }
-                  : { opacity: 1, y: 0, scale: 1 }
-              }
-              exit={
-                isMobile
-                  ? { opacity: 0, scale: 0.9, x: "-50%", y: "-50%" }
-                  : { opacity: 0, y: -10, scale: 0.95 }
-              }
-              className={
-                isMobile
-                  ? "fixed left-1/2 top-1/2 z-[110] w-[min(90vw,450px)] lg:hidden"
-                  : "absolute right-0 top-full mt-4 z-50 w-[min(90vw,450px)] hidden lg:block"
-              }
-            >
-              <div className="overflow-hidden rounded-[2.5rem] border border-border bg-card p-4 shadow-2xl">
-                <div className="flex items-center justify-between mb-4 lg:hidden">
-                  <h3 className="text-lg font-bold text-foreground px-2">
-                    Search Products
-                  </h3>
-                  <button
-                    onClick={() => setIsOpen(false)}
-                    className="rounded-full p-2 text-muted-foreground hover:bg-secondary transition-colors"
-                  >
-                    <X className="h-5 w-5" />
-                  </button>
-                </div>
-
-                <div className="relative mb-4">
-                  <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-                  <input
-                    autoFocus
-                    type="text"
-                    value={query}
-                    onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search power solutions..."
-                    className="w-full rounded-2xl border border-border bg-secondary/50 py-4 pl-12 pr-4 text-sm font-medium focus:border-primary focus:outline-none"
-                  />
-                  {query && (
-                    <button
-                      onClick={() => setQuery("")}
-                      className="absolute right-4 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                    >
-                      <X className="h-4 w-4" />
-                    </button>
-                  )}
-                </div>
-
-                <div className="max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
-                  {results.length > 0 ? (
-                    <div className="flex flex-col gap-2">
-                      {results.map((product) => (
-                        <Link
-                          key={product.id}
-                          href={`/products/${product.id}`}
-                          onClick={() => {
-                            setIsOpen(false);
-                            setQuery("");
-                          }}
-                          className="flex items-center gap-4 rounded-2xl p-3 transition-colors hover:bg-secondary group"
-                        >
-                          <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden rounded-xl border border-border bg-white">
-                            <Image
-                              src={product.main_image || ""}
-                              alt={product.name}
-                              fill
-                              className="object-contain p-2"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <h4 className="truncate text-sm font-bold text-foreground group-hover:text-primary transition-colors">
-                              {product.name}
-                            </h4>
-                            <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
-                              {formatNaira(product.markup_price)}
-                            </p>
-                          </div>
-                          <ChevronDown className="h-4 w-4 -rotate-90 text-muted-foreground opacity-0 group-hover:opacity-100 transition-all" />
-                        </Link>
-                      ))}
-                    </div>
-                  ) : query.length >= 2 ? (
-                    <div className="py-12 text-center">
-                      <p className="text-sm font-medium text-muted-foreground">
-                        No products found for &quot;{query}&quot;
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="py-8 text-center">
-                      <p className="text-xs font-bold uppercase tracking-widest text-muted-foreground">
-                        Start typing to search...
-                      </p>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </motion.div>
-          </>
         )}
       </AnimatePresence>
     </div>
@@ -506,8 +321,6 @@ const Navbar = () => {
 
           {/* Right Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
-            <GlobalSearch />
-
             {user && <NotificationBell />}
 
             {/* Responsive Cart Button */}
