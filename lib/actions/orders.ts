@@ -2,7 +2,7 @@
 
 import { createClient, getUserProfile } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
-import { sendNotification } from "./notifications";
+import { createNotification } from "./notifications";
 
 export async function createOrder(orderData: {
   items: any[];
@@ -47,16 +47,20 @@ export async function createOrder(orderData: {
 
   if (itemsError) {
     console.error("Error creating order items:", itemsError);
-    // We might want to delete the order here if items fail, but for now let's just return error
     return { error: "Order placed but items could not be saved. Please contact support." };
   }
 
   // 3. Send notification if user is logged in
   if (profile?.id) {
-    await sendNotification(profile.id, "order_confirmed", {
-      orderId: order.id,
-      totalAmount: orderData.totalAmount,
-    });
+    console.log(`[DEBUG] Order action successful, triggering notification for ${profile.id}`);
+    const notifResult = await createNotification(
+      profile.id,
+      "Order Confirmed",
+      `Your order #${order.id.slice(0, 8)} has been placed successfully.`,
+      "order",
+      "/dashboard"
+    );
+    console.log(`[DEBUG] Notification result:`, notifResult);
   }
 
   revalidatePath("/admin/orders");

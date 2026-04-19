@@ -22,6 +22,7 @@ import {
 import ProductCard from "@/components/ProductCard";
 import { useCartStore } from "@/lib/store/useCartStore";
 import InstallmentModal from "@/components/InstallmentModal";
+import { toast } from "sonner";
 
 export default function ProductClient({ product }: { product: ProductDetail }) {
   // const price = product.markup_price || 0;
@@ -84,6 +85,7 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
 
   const handleAddToCart = () => {
     addToCart(product, quantity);
+    toast.success(`${product.name} (${quantity}) added to cart`);
   };
 
   const handleBuyNow = () => {

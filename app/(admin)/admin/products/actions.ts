@@ -3,6 +3,7 @@
 import { createClient, getUserProfile } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createNotification } from "@/lib/actions/notifications";
 
 export async function createProduct(formData: FormData) {
   const profile = await getUserProfile();
@@ -127,6 +128,16 @@ export async function createProduct(formData: FormData) {
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   revalidatePath("/");
+
+  if (profile?.id) {
+    await createNotification(
+      profile.id,
+      "Product Created",
+      `New product "${name}" has been successfully added to the marketplace.`,
+      "system",
+      "/admin/products"
+    );
+  }
 
   return { success: true, id: (product as any).id };
 }

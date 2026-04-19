@@ -92,7 +92,7 @@ const InstallmentModal = ({
       if (success) {
         toast.success("Reservation created successfully!");
         if (onSuccess) onSuccess();
-        onClose();
+        handleClose();
       } else {
         toast.error(error || "Failed to create reservation.");
       }

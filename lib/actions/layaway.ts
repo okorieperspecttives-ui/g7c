@@ -3,7 +3,7 @@
 import { createClient, getUserProfile } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { formatNaira } from "@/lib/products";
-import { sendNotification } from "./notifications";
+import { createNotification } from "./notifications";
 
 /**
  * Creates a new Pay Small Small (layaway) reservation.
@@ -25,11 +25,6 @@ export async function createPaySmallSmallReservation(
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 90);
 
-  // If we have multiple items, we create one reservation that represents the cart.
-  // We'll use the first item's ID as the main product_id for the table's FK requirement,
-  // but we'll store the full list in a new field if possible, or just create multiple reservations.
-  // Given the current schema, creating multiple reservations is safer.
-  
   const itemsToProcess = items && items.length > 0 
     ? items 
     : [{ id: productId, name: "Product", quantity: 1, price: totalAmount }];
@@ -37,7 +32,6 @@ export async function createPaySmallSmallReservation(
   const results = [];
   
   for (const item of itemsToProcess) {
-    // For each item, we calculate its proportional deposit
     const itemTotal = (item.price || totalAmount) * (item.quantity || 1);
     const itemDeposit = itemTotal * (depositAmount / totalAmount);
 
@@ -61,12 +55,16 @@ export async function createPaySmallSmallReservation(
       continue;
     }
 
-    // Send notification for each
-    await sendNotification(profile.id, "reservation_created", {
-      reservationId: data.id,
-      productName: item.name,
-      depositAmount: formatNaira(itemDeposit),
-    });
+    // Send notification
+    console.log(`[DEBUG] Reservation created for item ${item.id}, triggering notification`);
+    const notifResult = await createNotification(
+      profile.id,
+      "Reservation Created",
+      `Your reservation for ${item.name} has been successfully created.`,
+      "reservation",
+      "/dashboard"
+    );
+    console.log(`[DEBUG] Notification result:`, notifResult);
     
     results.push(data);
   }
@@ -92,9 +90,8 @@ export async function makeLayawayPayment(reservationId: string, paymentAmount: n
 
   const supabase = await createClient();
 
-  // 1. Fetch current reservation to check status and calculate new paid_amount
   const { data: reservation, error: fetchError } = await (supabase.from("layaway_reservations") as any)
-    .select("*")
+    .select("*, products(name)")
     .eq("id", reservationId)
     .eq("user_id", profile.id)
     .single();
@@ -111,8 +108,6 @@ export async function makeLayawayPayment(reservationId: string, paymentAmount: n
   const remainingBalance = Number(reservation.remaining_balance);
   const minPayment = totalAmount * 0.1;
 
-  // Validation: Minimum payment is 10% of total_amount
-  // Exception: If remaining balance is less than 10%, user must pay full remaining balance
   if (remainingBalance < minPayment) {
     if (Math.abs(paymentAmount - remainingBalance) > 0.01) {
       return { error: `Remaining balance is less than the 10% minimum. You must pay the full remaining balance of ${formatNaira(remainingBalance)}.` };
@@ -123,7 +118,6 @@ export async function makeLayawayPayment(reservationId: string, paymentAmount: n
     }
   }
 
-  // Ensure payment doesn't exceed balance
   if (paymentAmount > remainingBalance) {
     return { error: `Payment amount cannot exceed the remaining balance of ${remainingBalance}.` };
   }
@@ -131,15 +125,14 @@ export async function makeLayawayPayment(reservationId: string, paymentAmount: n
   const newPaidAmount = Number(reservation.paid_amount) + paymentAmount;
   const isCompleted = Math.abs(newPaidAmount - totalAmount) < 0.01 || newPaidAmount >= totalAmount;
 
-  // 2. Update the reservation
-  const { data: updatedData, error: updateError, count } = await (supabase.from("layaway_reservations") as any)
+  const { data: updatedData, error: updateError } = await (supabase.from("layaway_reservations") as any)
     .update({
       paid_amount: isCompleted ? totalAmount : newPaidAmount,
       status: isCompleted ? "completed" : "active",
       updated_at: new Date().toISOString(),
     })
     .eq("id", reservationId)
-    .eq("user_id", profile.id) // Security: ensure user owns this reservation
+    .eq("user_id", profile.id)
     .select();
 
   if (updateError) {
@@ -147,18 +140,17 @@ export async function makeLayawayPayment(reservationId: string, paymentAmount: n
     return { error: "Failed to record payment. Please try again." };
   }
 
-  if (!updatedData || updatedData.length === 0) {
-    console.error("No rows updated for reservation:", reservationId);
-    return { error: "Payment failed. Please ensure you have permission to update this reservation." };
-  }
-
   // Send notification
-  await sendNotification(profile.id, "payment_received", {
-    reservationId,
-    amount: formatNaira(paymentAmount),
-  });
+  console.log(`[DEBUG] Payment of ${paymentAmount} successful for reservation ${reservationId}, triggering notification`);
+  const notifResult = await createNotification(
+    profile.id,
+    "Payment Received",
+    `We received your payment of ${formatNaira(paymentAmount)} towards ${reservation.products?.name}.`,
+    "payment",
+    "/dashboard"
+  );
+  console.log(`[DEBUG] Notification result:`, notifResult);
 
-  // Revalidate multiple paths to ensure UI is in sync
   revalidatePath("/dashboard");
   revalidatePath("/(main)/dashboard", "page");
   revalidatePath("/profile");
@@ -200,16 +192,11 @@ export async function getMyReservations() {
 
 /**
  * Logic to process expired reservations:
- * 1. Find active reservations where expires_at < now
- * 2. Calculate refund (90% of paid_amount)
- * 3. Mark as cancelled
- * Note: This would typically be run by a cron job or background worker.
  */
 export async function processExpiredReservations() {
   const supabase = await createClient();
   const now = new Date().toISOString();
 
-  // 1. Fetch expired active reservations
   const { data: expired, error: fetchError } = await (supabase.from("layaway_reservations") as any)
     .select("*")
     .eq("status", "active")
@@ -230,12 +217,10 @@ export async function processExpiredReservations() {
     const restockingFee = paidAmount * 0.1;
     const refundAmount = paidAmount - restockingFee;
 
-    // 2. Cancel the reservation and record the fee/refund (logically for now)
     const { error: updateError } = await (supabase.from("layaway_reservations") as any)
       .update({
         status: "cancelled",
         updated_at: new Date().toISOString(),
-        // In a real app, you'd also trigger a refund process here
       })
       .eq("id", res.id);
 
@@ -265,7 +250,6 @@ export async function cancelPaySmallSmallReservation(reservationId: string) {
 
   const supabase = await createClient();
 
-  // 1. Fetch current reservation
   const { data: reservation, error: fetchError } = await (supabase.from("layaway_reservations") as any)
     .select("*")
     .eq("id", reservationId)
@@ -284,7 +268,6 @@ export async function cancelPaySmallSmallReservation(reservationId: string) {
   const restockingFee = paidAmount * 0.1;
   const refundAmount = paidAmount - restockingFee;
 
-  // 2. Create refund record
   const { error: refundError } = await (supabase.from("refunds") as any).insert([
     {
       layaway_reservation_id: reservation.id,
@@ -303,7 +286,15 @@ export async function cancelPaySmallSmallReservation(reservationId: string) {
     return { error: "Failed to create refund record. Please contact support." };
   }
 
-  // 3. Update reservation status to cancelled
+  // Send notification about refund request
+  await createNotification(
+    profile.id,
+    "Refund Request Created",
+    `Your refund request for reservation #${reservation.id.slice(0, 8)} is pending.`,
+    "refund",
+    "/dashboard"
+  );
+
   const { error: updateError } = await (supabase.from("layaway_reservations") as any)
     .update({
       status: "cancelled",

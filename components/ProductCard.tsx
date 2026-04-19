@@ -10,6 +10,7 @@ import { useCartStore } from "@/lib/store/useCartStore";
 import { useState, useMemo } from "react";
 import InstallmentModal from "./InstallmentModal";
 import { getPublicUrl } from "@/lib/supabase";
+import { toast } from "sonner";
 
 interface ProductCardProps {
   product: Product;
@@ -25,7 +26,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
     e.preventDefault();
     e.stopPropagation();
     addToCart(product);
-    // Simple visual feedback could be added here (e.g., a toast)
+    toast.success(`${product.name} added to cart`);
   };
 
   const handleBuyNow = (e: React.MouseEvent) => {

@@ -23,6 +23,7 @@ import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { usePathname, useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase";
+import NotificationBell from "@/components/NotificationBell";
 
 interface AdminShellProps {
   children: ReactNode;
@@ -186,10 +187,7 @@ export default function AdminShell({ children, profile }: AdminShellProps) {
             </div>
 
             <div className="flex items-center gap-6">
-              <button className="relative p-2 rounded-xl bg-secondary/50 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
-                <Bell className="h-5 w-5" />
-                <span className="absolute right-2.5 top-2.5 h-2 w-2 rounded-full bg-primary ring-2 ring-background"></span>
-              </button>
+              <NotificationBell />
               
               <div className="relative">
                 <button 

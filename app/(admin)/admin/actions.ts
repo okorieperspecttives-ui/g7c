@@ -3,7 +3,7 @@
 import { createClient, getUserProfile } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { sendNotification } from "@/lib/actions/notifications";
+import { createNotification } from "@/lib/actions/notifications";
 
 // --- Categories ---
 
@@ -200,11 +200,29 @@ export async function updateReservationStatus(id: string, status: string) {
   if (!profile || profile.role !== "admin") return { error: "Unauthorized" };
 
   const supabase = await createClient();
+  
+  // Fetch reservation details for user_id and product name
+  const { data: reservation } = await (supabase.from("layaway_reservations") as any)
+    .select("user_id, products(name)")
+    .eq("id", id)
+    .single();
+
   const { error } = await (supabase.from("layaway_reservations") as any)
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) return { error: error.message };
+
+  if (reservation?.user_id) {
+    await createNotification(
+      reservation.user_id,
+      "Reservation Status Updated",
+      `Your reservation for ${reservation.products?.name} status has been changed to ${status}.`,
+      "reservation",
+      "/dashboard"
+    );
+  }
+
   revalidatePath("/admin/reservations");
   revalidatePath("/dashboard");
   return { success: true };
@@ -247,10 +265,13 @@ export async function updateRefundStatus(id: string, status: string) {
   if (error) return { error: error.message };
 
   if (refund) {
-    await sendNotification(refund.user_id, "refund_status_changed", {
-      reservationId: refund.layaway_reservation_id,
-      status,
-    });
+    await createNotification(
+      refund.user_id,
+      "Refund Status Updated",
+      `Your refund for reservation #${refund.layaway_reservation_id.slice(0, 8)} is now ${status}.`,
+      "refund",
+      "/dashboard"
+    );
   }
 
   revalidatePath("/admin/refunds");
@@ -278,9 +299,27 @@ export async function updateOrderStatus(orderId: string, status: string) {
   if (!profile || profile.role !== "admin") return { error: "Unauthorized" };
 
   const supabase = await createClient();
+  
+  // Fetch user_id for the order
+  const { data: order } = await (supabase.from("orders") as any)
+    .select("user_id")
+    .eq("id", orderId)
+    .single();
+
   const { error } = await (supabase.from("orders") as any).update({ status }).eq("id", orderId);
 
   if (error) return { error: error.message };
+
+  if (order?.user_id) {
+    await createNotification(
+      order.user_id,
+      "Order Status Updated",
+      `Your order #${orderId.slice(0, 8)} status has been changed to ${status}.`,
+      "order",
+      "/dashboard"
+    );
+  }
+
   revalidatePath("/admin/orders");
   revalidatePath(`/admin/orders/${orderId}`);
   return { success: true };

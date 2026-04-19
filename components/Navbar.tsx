@@ -20,6 +20,7 @@ import { useCartStore } from "@/lib/store/useCartStore";
 import { createClient } from "@/lib/supabase";
 import Image from "next/image";
 import { User } from "@supabase/supabase-js";
+import NotificationBell from "./NotificationBell";
 
 const navigationLinks = [
   { label: "Shop", href: "/shop" },
@@ -506,6 +507,8 @@ const Navbar = () => {
           {/* Right Icons */}
           <div className="flex items-center gap-1 sm:gap-2">
             <GlobalSearch />
+
+            {user && <NotificationBell />}
 
             {/* Responsive Cart Button */}
             <button
