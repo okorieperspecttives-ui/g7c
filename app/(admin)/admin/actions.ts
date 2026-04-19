@@ -3,6 +3,7 @@
 import { createClient, getUserProfile } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { sendNotification } from "@/lib/actions/notifications";
 
 // --- Categories ---
 
@@ -234,11 +235,24 @@ export async function updateRefundStatus(id: string, status: string) {
     updateData.processed_at = new Date().toISOString();
   }
 
+  const { data: refund, error: fetchError } = await (supabase.from("refunds") as any)
+    .select("user_id, layaway_reservation_id")
+    .eq("id", id)
+    .single();
+
   const { error } = await (supabase.from("refunds") as any)
     .update(updateData)
     .eq("id", id);
 
   if (error) return { error: error.message };
+
+  if (refund) {
+    await sendNotification(refund.user_id, "refund_status_changed", {
+      reservationId: refund.layaway_reservation_id,
+      status,
+    });
+  }
+
   revalidatePath("/admin/refunds");
   revalidatePath("/dashboard");
   return { success: true };

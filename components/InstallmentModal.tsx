@@ -15,7 +15,7 @@ interface InstallmentModalProps {
   productId?: string;
   isDirectPayment?: boolean;
   onSuccess?: () => void;
-  items?: { name: string; quantity: number; id?: string }[];
+  items?: { name: string; quantity: number; id?: string; price?: number }[];
 }
 
 const InstallmentModal = ({ 
@@ -80,7 +80,13 @@ const InstallmentModal = ({
       const { success, error } = await createPaySmallSmallReservation(
         targetProductId,
         productPrice,
-        depositAmount
+        depositAmount,
+        items?.map(item => ({
+           id: item.id || "",
+           name: item.name,
+           quantity: item.quantity,
+           price: item.price || (productPrice / (items?.length || 1))
+         }))
       );
 
       if (success) {

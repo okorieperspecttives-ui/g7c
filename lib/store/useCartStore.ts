@@ -4,7 +4,10 @@ import { Product, CartItem } from "../types";
 
 interface CartStore {
   items: CartItem[];
+  directCheckoutItem: CartItem | null;
   addToCart: (product: Product, quantity?: number) => void;
+  setDirectCheckout: (product: Product, quantity?: number) => void;
+  clearDirectCheckout: () => void;
   removeFromCart: (productId: string) => void;
   updateQuantity: (productId: string, quantity: number) => void;
   clearCart: () => void;
@@ -16,6 +19,7 @@ export const useCartStore = create<CartStore>()(
   persist(
     (set, get) => ({
       items: [],
+      directCheckoutItem: null,
       
       addToCart: (product, quantity = 1) => {
         set((state) => {
@@ -35,6 +39,14 @@ export const useCartStore = create<CartStore>()(
             items: [...state.items, { ...product, quantity }],
           };
         });
+      },
+
+      setDirectCheckout: (product, quantity = 1) => {
+        set({ directCheckoutItem: { ...product, quantity } });
+      },
+
+      clearDirectCheckout: () => {
+        set({ directCheckoutItem: null });
       },
       
       removeFromCart: (productId) => {

@@ -6,16 +6,20 @@ import { Trash2, Plus, Minus, ArrowRight, ShoppingBag, X } from "lucide-react";
 import { formatNaira } from "@/lib/products";
 import { useCartStore } from "@/lib/store/useCartStore";
 import { CartItem } from "@/lib/types";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { getPublicUrl } from "@/lib/supabase";
 
 export default function CartPage() {
-  const { items, updateQuantity, removeFromCart, clearCart, getSubtotal } = useCartStore();
+  const { items, updateQuantity, removeFromCart, clearCart, getSubtotal, clearDirectCheckout } = useCartStore();
   const subtotal = getSubtotal();
   const deliveryFee = 5000;
   const total = subtotal + deliveryFee;
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+
+  useEffect(() => {
+    clearDirectCheckout();
+  }, [clearDirectCheckout]);
 
   if (items.length === 0) {
     return (

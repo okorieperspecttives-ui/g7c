@@ -3,11 +3,17 @@
 import { createClient, getUserProfile } from "@/lib/supabase/server";
 import { revalidatePath } from "next/cache";
 import { formatNaira } from "@/lib/products";
+import { sendNotification } from "./notifications";
 
 /**
  * Creates a new Pay Small Small (layaway) reservation.
  */
-export async function createPaySmallSmallReservation(productId: string, totalAmount: number, depositAmount: number) {
+export async function createPaySmallSmallReservation(
+  productId: string, 
+  totalAmount: number, 
+  depositAmount: number,
+  items?: { id: string; name: string; quantity: number; price: number }[]
+) {
   const profile = await getUserProfile();
   if (!profile) {
     return { error: "You must be signed in to make a reservation." };
@@ -19,30 +25,60 @@ export async function createPaySmallSmallReservation(productId: string, totalAmo
   const expiresAt = new Date();
   expiresAt.setDate(expiresAt.getDate() + 90);
 
-  const { data, error } = await (supabase.from("layaway_reservations") as any)
-    .insert([
-      {
-        user_id: profile.id,
-        product_id: productId,
-        total_amount: totalAmount,
-        deposit_amount: depositAmount,
-        paid_amount: depositAmount, // Initial deposit is the first payment
-        status: "active",
-        expires_at: expiresAt.toISOString(),
-      },
-    ])
-    .select()
-    .single();
+  // If we have multiple items, we create one reservation that represents the cart.
+  // We'll use the first item's ID as the main product_id for the table's FK requirement,
+  // but we'll store the full list in a new field if possible, or just create multiple reservations.
+  // Given the current schema, creating multiple reservations is safer.
+  
+  const itemsToProcess = items && items.length > 0 
+    ? items 
+    : [{ id: productId, name: "Product", quantity: 1, price: totalAmount }];
 
-  if (error) {
-    console.error("Error creating reservation:", error);
-    return { error: "Failed to create reservation. Please try again." };
+  const results = [];
+  
+  for (const item of itemsToProcess) {
+    // For each item, we calculate its proportional deposit
+    const itemTotal = (item.price || totalAmount) * (item.quantity || 1);
+    const itemDeposit = itemTotal * (depositAmount / totalAmount);
+
+    const { data, error } = await (supabase.from("layaway_reservations") as any)
+      .insert([
+        {
+          user_id: profile.id,
+          product_id: item.id,
+          total_amount: itemTotal,
+          deposit_amount: itemDeposit,
+          paid_amount: itemDeposit,
+          status: "active",
+          expires_at: expiresAt.toISOString(),
+        },
+      ])
+      .select()
+      .single();
+
+    if (error) {
+      console.error("Error creating reservation for item:", item.id, error);
+      continue;
+    }
+
+    // Send notification for each
+    await sendNotification(profile.id, "reservation_created", {
+      reservationId: data.id,
+      productName: item.name,
+      depositAmount: formatNaira(itemDeposit),
+    });
+    
+    results.push(data);
+  }
+
+  if (results.length === 0) {
+    return { error: "Failed to create reservations. Please try again." };
   }
 
   revalidatePath("/dashboard");
   revalidatePath("/profile");
   
-  return { success: true, reservation: data };
+  return { success: true, reservations: results };
 }
 
 /**
@@ -115,6 +151,12 @@ export async function makeLayawayPayment(reservationId: string, paymentAmount: n
     console.error("No rows updated for reservation:", reservationId);
     return { error: "Payment failed. Please ensure you have permission to update this reservation." };
   }
+
+  // Send notification
+  await sendNotification(profile.id, "payment_received", {
+    reservationId,
+    amount: formatNaira(paymentAmount),
+  });
 
   // Revalidate multiple paths to ensure UI is in sync
   revalidatePath("/dashboard");

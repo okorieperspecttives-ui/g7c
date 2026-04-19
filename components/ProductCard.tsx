@@ -17,6 +17,7 @@ interface ProductCardProps {
 
 const ProductCard = ({ product }: ProductCardProps) => {
   const addToCart = useCartStore((state) => state.addToCart);
+  const setDirectCheckout = useCartStore((state) => state.setDirectCheckout);
   const router = useRouter();
   const [isInstallmentOpen, setIsInstallmentOpen] = useState(false);
 
@@ -30,7 +31,7 @@ const ProductCard = ({ product }: ProductCardProps) => {
   const handleBuyNow = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
-    addToCart(product);
+    setDirectCheckout(product, 1);
     router.push("/checkout");
   };
 

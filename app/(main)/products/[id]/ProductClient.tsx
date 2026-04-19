@@ -75,6 +75,7 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
   const [quantity, setQuantity] = useState(1);
   const [isInstallmentOpen, setIsInstallmentOpen] = useState(false);
   const addToCart = useCartStore((state) => state.addToCart);
+  const setDirectCheckout = useCartStore((state) => state.setDirectCheckout);
   const router = useRouter();
 
   const handleQuantityChange = (delta: number) => {
@@ -86,7 +87,7 @@ export default function ProductClient({ product }: { product: ProductDetail }) {
   };
 
   const handleBuyNow = () => {
-    addToCart(product, quantity);
+    setDirectCheckout(product, quantity);
     router.push("/checkout");
   };
 
